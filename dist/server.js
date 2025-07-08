@@ -5,6 +5,10 @@ import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+const run = async () => {
+    const open = (await import('open')).default;
+    await open(`http://localhost:${port}`);
+};
 const app = express();
 const port = 3000;
 app.get('/', (req, res) => {
@@ -43,4 +47,7 @@ app.get('/', (req, res) => {
     });
     console.log('Running:', scriptPath);
 });
-app.listen(port, () => console.log(`Server listening on port ${port}`));
+app.listen(port, () => {
+    console.log(`Server listening on port ${port}`);
+});
+run();

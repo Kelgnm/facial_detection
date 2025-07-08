@@ -1,5 +1,3 @@
-import { createServer } from "http";
-import { handler } from "./handler";
 import { spawn } from 'child_process';
 import express from 'express';
 import path from 'path';
@@ -8,6 +6,11 @@ import { dirname } from 'path';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+
+const run = async () => {
+  const open = (await import('open')).default;
+  await open(`http://localhost:${port}`);
+};
 
 const app = express();
 const port = 3000;
@@ -54,5 +57,10 @@ app.get('/', (req, res) => {
     console.log('Running:', scriptPath);
 });
 
-app.listen(port, () => console.log(`Server listening on port ${port}`));
+app.use(express.static(path.join(process.cwd(), 'public')));
 
+app.listen(port, () =>  {
+    console.log(`Server listening on port ${port}`);
+});
+
+run();

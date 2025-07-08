@@ -40,10 +40,10 @@ image_dir = os.path.join(BASE_DIR, "images")
 #     print("No streaming :(, existing. . .")
 #     exit()
 
-
 known_face_encodings = []
 known_face_names = []
 
+person_data = {}
 seen_people = set()
 face_locations = []
 face_encodings = []
@@ -85,7 +85,7 @@ while True:
         for face_encoding in face_encodings:
             matches = face_recognition.compare_faces(known_face_encodings, face_encoding)
             name = "Unknown"
-            person_data = {}
+            
 
             face_distances = face_recognition.face_distance(known_face_encodings, face_encoding)
             best_match = np.argmin(face_distances)
@@ -137,4 +137,4 @@ while True:
 
 img.release()
 cv.destroyAllWindows()
-print(json.dumps({"seen": name}))
+print("I see youuuuu *spy noises*", json.dumps({"seen": name}))
