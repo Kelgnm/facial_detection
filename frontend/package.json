@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc",
-    "dev": "tsc-watch --onSuccess \"node dist/server.js\"",
+    "dev": "npx tsc-watch --onSuccess \"node dist/server.js\"",
     "save": "git add . && git commit -m \"Changes\" && git remote -v && git push -f && git push origin main"
   },
   "type": "module",
@@ -16,7 +16,6 @@
   "devDependencies": {
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
-    "tsc-watch": "^7.1.1",
     "typescript": "^5.8.3"
   }
 }

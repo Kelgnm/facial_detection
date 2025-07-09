@@ -1,15 +1,16 @@
 {
-    "extends": "@tsconfig/node20/tsconfig.json",
-    "compilerOptions": {
-    "module": "ESNext",
-    "target": "ES2020",
-    "moduleResolution": "node",
-    "esModuleInterop": true,
-    "strict": true,
-    "outDir": "./dist",
-    "rootDir": "./src",
-    "skipLibCheck": true
+  "compilerOptions": {
+    "target": "ES6",                          // JavaScript version output
+    "module": "ESNext",                       // Module system
+    "jsx": "react-jsx",                       // JSX support (for React 17+)
+    "strict": true,                           // Enable strict type-checking
+    "moduleResolution": "node",              // How modules are resolved
+    "esModuleInterop": true,                 // Allow default imports from CommonJS
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,                    // Skip type checks on libraries
+    "baseUrl": "./",                          // Optional: base path
+    "outDir": "./dist"                        // Output directory
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules"]
+  "include": ["src"],                         // Files to include (typically your source folder)
+  "exclude": ["node_modules"]                 // Folders to ignore
 }
