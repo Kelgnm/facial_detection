@@ -1,0 +1,21 @@
+{
+  "name": "frontend",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc",
+    "dev": "npx tsc-watch --onSuccess \"node dist/server.js\"",
+    "save": "git add . && git commit -m \"Changes\" && git remote -v && git push -f && git push origin main"
+  },
+  "type": "module",
+  "keywords": [],
+  "author": "",
+  "description": "",
+  "devDependencies": {
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6",
+    "typescript": "^5.8.3"
+  }
+}

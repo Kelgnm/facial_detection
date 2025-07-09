@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Spycam</title>
+</head>
+<body>
+  <h1>Hello, client!</h1>
+  <button onclick="runPython()">Run Python</button>
+  <script>
+    function runPython() {
+      fetch('/run-python')
+        .then(res => res.text())
+        .then(data => alert(data))
+        .catch(err => alert('Error: ' + err));
+    }
+  </script>
+</body>
+</html>
