@@ -22,7 +22,7 @@ with open(os.path.join(BASE_DIR, "labels.pickle"), 'rb') as file:
 
 
 ip = "rtsp://admin:Hik123456@192.168.10.135:554/Streaming/Channels/102/"
-img = cv.VideoCapture(0)
+img = cv.VideoCapture(1)
 
 image_dir = os.path.join(BASE_DIR, "images")
 
@@ -137,4 +137,4 @@ while True:
 
 img.release()
 cv.destroyAllWindows()
-print("I see youuuuu *spy noises*", json.dumps({"seen": name}))
+print(json.dumps({"seen": name}))
