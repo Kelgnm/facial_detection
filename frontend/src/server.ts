@@ -22,7 +22,7 @@ app.get('/', (req, res) => {
 app.get('/run-python', (req, res) => {
     const scriptPath = path.resolve(process.cwd(), '..', 'src', 'scripts', 'image.py');
 
-    const Python = spawn("python3", [scriptPath], { cwd: path.dirname(scriptPath) });
+    const Python = spawn("python", [scriptPath], { cwd: path.dirname(scriptPath) });
 
     let output = '';
     let errorOutput = '';
@@ -38,21 +38,43 @@ app.get('/run-python', (req, res) => {
 
     Python.on("error", (err) => {
         if(!res.headersSent) {
-            res.status(500).send(`Failed to run: <br><pre>${err.message}</pre>`)
+            res.status(500).send(`Failed to run: \n${err.message}`)
         }
     });
 
     Python.on("close", (code) => {
-        if (res.headersSent) return;
-        try {
-            const result = JSON.parse(output);
-            res.send(`I see youuuuu *spy noises* ${result.seen}`)
-        } catch (err) {
+    if (res.headersSent) return;
+
+    // console.log("Python exited with code:", code);
+    // console.log("Raw Python stdout:", output);
+    // console.log("Python stderr:", errorOutput);
+
+    try {
+        const result = JSON.parse(output);
+        const seen = result?.seen?.length
+            ? result.seen.join(', ')
+            : 'nothing';
+
+        res.send(`I seeeeee youuuu *spy noises*: ${seen}`);
+    } catch (error) {
+        if (code === 0) {
             res
-                .status(500)
-                .send('Python exited with code ${code}<br><pre>${errorOutput || output}</pre>');
+            .send(`
+                ${output || '[no output]'}
+            `);
+        } else {
+            res
+            .status(500)
+            .send(`
+                Python exited with code ${code}
+                ${errorOutput || '[no stderr]'}
+                ${output || '[no stdout]'}
+                ${(error as Error).message}
+            `);
         }
-    });
+    }
+});
+
 
     console.log('Running:', scriptPath);
 });

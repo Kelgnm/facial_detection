@@ -25,7 +25,7 @@ app.get('/', (req, res) => {
 });
 app.get('/run-python', (req, res) => {
     const scriptPath = path.resolve(process.cwd(), '..', 'src', 'scripts', 'image.py');
-    const Python = spawn("python3", [scriptPath], { cwd: path.dirname(scriptPath) });
+    const Python = spawn("python", [scriptPath], { cwd: path.dirname(scriptPath) });
     let output = '';
     let errorOutput = '';
     Python.stdout.on('data', (data) => {
@@ -37,24 +37,37 @@ app.get('/run-python', (req, res) => {
     });
     Python.on("error", (err) => {
         if (!res.headersSent) {
-            res.status(500).send(`Failed to run: <br><pre>${err.message}</pre>`);
+            res.status(500).send(`Failed to run: \n${err.message}`);
         }
     });
     Python.on("close", (code) => {
+        var _a;
         if (res.headersSent)
             return;
-        if (code === 0) {
-            try {
-                const result = JSON.parse(output);
-                res.send(`I see youuuuu *spy noises* ${result.seen}`);
-            }
-            catch (error) {
-                res
-                    .send('Python exited with code ${code}<br><pre>${errorOutput || output}</pre>');
-            }
+        // console.log("Python exited with code:", code);
+        // console.log("Raw Python stdout:", output);
+        // console.log("Python stderr:", errorOutput);
+        try {
+            const result = JSON.parse(output);
+            const seen = ((_a = result === null || result === void 0 ? void 0 : result.seen) === null || _a === void 0 ? void 0 : _a.length)
+                ? result.seen.join(', ')
+                : 'nothing';
+            res.send(`I seeeeee youuuu *spy noises*: ${seen}`);
         }
-        else {
-            res.status(500).send(`Python error (code ${code})<br><pre>${errorOutput || output}</pre>`);
+        catch (error) {
+            if (code === 0) {
+                res.send(`
+                ${output || '[no output]'}
+            `);
+            }
+            else {
+                res.status(500).send(`
+                Python exited with code ${code}
+                ${errorOutput || '[no stderr]'}
+                ${output || '[no stdout]'}
+                ${error.message}
+            `);
+            }
         }
     });
     console.log('Running:', scriptPath);
