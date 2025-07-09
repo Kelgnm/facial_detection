@@ -55,7 +55,7 @@ app.get('/run-python', (req, res) => {
             ? result.seen.join(', ')
             : 'nothing';
 
-        res.send(`I seeeeee youuuu *spy noises*: ${seen}`);
+        res.send(result);
     } catch (error) {
         if (code === 0) {
             res

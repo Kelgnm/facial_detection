@@ -52,16 +52,19 @@ app.get('/run-python', (req, res) => {
             const seen = ((_a = result === null || result === void 0 ? void 0 : result.seen) === null || _a === void 0 ? void 0 : _a.length)
                 ? result.seen.join(', ')
                 : 'nothing';
-            res.send(`I seeeeee youuuu *spy noises*: ${seen}`);
+            res.send(result);
         }
         catch (error) {
             if (code === 0) {
-                res.send(`
+                res
+                    .send(`
                 ${output || '[no output]'}
             `);
             }
             else {
-                res.status(500).send(`
+                res
+                    .status(500)
+                    .send(`
                 Python exited with code ${code}
                 ${errorOutput || '[no stderr]'}
                 ${output || '[no stdout]'}

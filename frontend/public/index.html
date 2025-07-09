@@ -5,14 +5,20 @@
 </head>
 <body>
   <h1>Hello, client!</h1>
-  <button onclick="runPython()">Run Python</button>
+  <button onclick="detectedFace()">Run Python</button>
   <script>
-    function runPython() {
-      fetch('/run-python')
-        .then(res => res.text())
-        .then(data => alert(data))
-        .catch(err => alert('Error: ' + err));
-    }
+    async function detectedFace() {
+      const res = fetch('/run-python')
+          .then(res => res.text())
+          .then(data => alert(data))
+          .catch(err => alert('Error: ' + err));
+
+      const data = await res.json();
+
+      if(data.seen && data.seen.toLowerCase() === "stiliyan") {
+        window.location.href = "/stiliyan.html"
+      }
+      }
   </script>
 </body>
 </html>
