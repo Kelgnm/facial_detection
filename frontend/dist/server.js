@@ -20,12 +20,14 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
 });
 const app = express();
 const port = 3000;
+const publicPath = path.join(__dirname, "..", "public");
+app.use(express.static(publicPath));
 app.get('/', (req, res) => {
-    res.sendFile(path.join(process.cwd(), 'public', 'index.html'));
+    res.sendFile(path.join(publicPath, 'public', 'index.html'));
 });
 app.get('/run-python', (req, res) => {
     const scriptPath = path.resolve(process.cwd(), '..', 'src', 'scripts', 'image.py');
-    const Python = spawn("python", [scriptPath], { cwd: path.dirname(scriptPath) });
+    const Python = spawn("python3", [scriptPath], { cwd: path.dirname(scriptPath) });
     let output = '';
     let errorOutput = '';
     Python.stdout.on('data', (data) => {
@@ -49,10 +51,10 @@ app.get('/run-python', (req, res) => {
         // console.log("Python stderr:", errorOutput);
         try {
             const result = JSON.parse(output);
-            const seen = ((_a = result === null || result === void 0 ? void 0 : result.seen) === null || _a === void 0 ? void 0 : _a.length)
+            const seen = ((_a = result === null || result === void 0 ? void 0 : result.seen) === null || _a === void 0 ? void 0 : _a.length) || null
                 ? result.seen.join(', ')
                 : 'nothing';
-            res.send(result);
+            res.json(seen);
         }
         catch (error) {
             if (code === 0) {
@@ -75,7 +77,6 @@ app.get('/run-python', (req, res) => {
     });
     console.log('Running:', scriptPath);
 });
-app.use(express.static(path.join(process.cwd(), 'public')));
 app.listen(port, () => {
     console.log(`Server listening on port ${port}`);
     run();

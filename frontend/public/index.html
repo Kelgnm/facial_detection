@@ -1,24 +1,59 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Spycam</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Main Menu</title>
 </head>
 <body>
-  <h1>Hello, client!</h1>
-  <button onclick="detectedFace()">Run Python</button>
+  <h1>Welcome, <span id="name">Guest</span>!</h1>
+
   <script>
+    const params = new URLSearchParams(window.location.search);
+    const name = params.get("name");
+    if (name) {
+        document.getElementById("name").textContent = name;
+    }
+  </script>
+  <button onclick="detectedFace()">Run Face Detection</button>
+  <script>
+    const Stored = localStorage.getItem('recognizedName');
+    if (Stored) {
+      document.getElementById('name').textContent = Stored;
+    } else {
+      const params = new URLSearchParams(window.location.search);
+      const name = params.get('name');
+      if (name) {
+        document.getElementById('name').textContent = name;
+        localStorage.setItem('recognizedName', name);
+      }
+    }
+  
     async function detectedFace() {
-      const res = fetch('/run-python')
-          .then(res => res.text())
-          .then(data => alert(data))
-          .catch(err => alert('Error: ' + err));
+      try {
+        const res = await fetch('/run-python');
+        const data = await res.json();
+        // const contentType = res.headers.get("content-type");
 
-      const data = await res.json();
+        // if (contentType && contentType.includes("scripts/json")) {
+        //   const data = await res.json();
 
-      if(data.seen && data.seen.toLowerCase() === "stiliyan") {
-        window.location.href = "/stiliyan.html"
+          if (data.seen) {
+            window.location.href = `/pages/${data.seen.toLowerCase()}.html?name=${data.seen}`;
+          } else {
+            alert('idk you');
+          }
+        // } else {
+        //   const text = await res.text();
+        //   console.error("Non-JSON response:", text);
+        //   alert("Face detection failed. Server didn't return JSON.");
+        // }
+      } catch (e) {
+        console.error("Detection error:", e);
+        alert("Error running face detection.");
       }
-      }
+}
+
   </script>
 </body>
 </html>

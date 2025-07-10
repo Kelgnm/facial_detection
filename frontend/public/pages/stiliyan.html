@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>stiliyan</title>
+</head>
+<body>
+  <h1>Welcome, <span id="role">Role</span> <span id="name">Guest</span>!</h1>
+  
+  <script>
+
+    const Stored = localStorage.getItem('recognizedName');
+    if (Stored) {
+      document.getElementById('name').textContent = Stored;
+    } else {
+      const params = new URLSearchParams(window.location.search);
+      const name = params.get('name');
+      if (name) {
+        document.getElementById('name').textContent = name;
+        localStorage.setItem('recognizedName', name);
+      }
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    const name = params.get("name");
+
+    if (name) {
+      document.getElementById("name").textContent = name;
+
+      fetch("/scripts/data.json")
+        .then(res => {
+          if (!res.ok) throw new Error("data.json not found");
+          return res.json();
+        })
+        .then(data => {
+          const person = data[name];
+          if (person && person.role) {
+            document.getElementById("role").textContent = person.role;
+          } else {
+            document.getElementById("role").textContent = "Unknown";
+          }
+        })
+    }
+  </script>
+
+  <button onclick="localStorage.removeItem('recognizedName'); window.location.href = '../index.html'">Log Out</button>
+</body>
+</html>
