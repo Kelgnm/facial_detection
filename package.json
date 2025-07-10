@@ -1,0 +1,27 @@
+{
+  "name": "frontend",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "save": "git add . && git commit -m \"Changes\" && git remote -v && git push -f && git push origin main"
+  },
+  "type": "module",
+  "keywords": [],
+  "author": "",
+  "description": "",
+  "devDependencies": {
+    "@types/express": "^5.0.3",
+    "@types/express-session": "^1.18.2",
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6",
+    "@types/ws": "^8.18.1",
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "express-session": "^1.18.1",
+    "open": "^10.1.2",
+    "ws": "^8.18.3"
+  },
+  "license": "MIT"
+}
