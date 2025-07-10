@@ -9,10 +9,11 @@
   <h1>Welcome, <span id="role">Role</span> <span id="name">Guest</span>!</h1>
   
   <script>
+    let mismatchCount = 0;
+    const storedName = localStorage.getItem('recognizedName')?.toLowerCase().trim();
 
-    const Stored = localStorage.getItem('recognizedName');
-    if (Stored) {
-      document.getElementById('name').textContent = Stored;
+    if (storedName) {
+      document.getElementById('name').textContent = storedName;
     } else {
       const params = new URLSearchParams(window.location.search);
       const name = params.get('name');
@@ -22,9 +23,33 @@
       }
     }
 
+
+    let security = setInterval(async () => {
+      try {
+        const res = await fetch('/run-python');
+        const data = await res.json();
+
+        const seenName = data.seen?.toLowerCase().trim();
+
+        if (seenName  !== storedName) {
+          mismatchCount++;
+          console.log("Mismatch count:", seenName, "vs", mismatchCount);
+          if (mismatchCount >= 1) {
+            alert("Face changed — logging out");
+            localStorage.removeItem('recognizedName');
+            clearInterval(security);
+            window.location.href = "../index.html";
+          }
+        } else {
+          mismatchCount = 0;
+        }
+      } catch (e) {
+        console.error("Face detection error:", e);
+      }
+    }, 5000);
+
     const params = new URLSearchParams(window.location.search);
     const name = params.get("name");
-
     if (name) {
       document.getElementById("name").textContent = name;
 
@@ -32,7 +57,7 @@
         .then(res => {
           if (!res.ok) throw new Error("data.json not found");
           return res.json();
-        })
+      })
         .then(data => {
           const person = data[name];
           if (person && person.role) {
@@ -40,8 +65,9 @@
           } else {
             document.getElementById("role").textContent = "Unknown";
           }
-        })
+      })
     }
+
   </script>
 
   <button onclick="localStorage.removeItem('recognizedName'); window.location.href = '../index.html'">Log Out</button>
