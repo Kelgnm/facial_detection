@@ -161,7 +161,7 @@ while True:
 
 
     cv.imshow("Work dammit", frame)
-    if cv.waitKey(30) & 0xff == ord('q'):
+    if cv.waitKey(1) & 0xff == ord('q'):
         break
 
 if face_names and any(name != "Unknown" for name in face_names):
