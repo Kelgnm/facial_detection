@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "save": "git add . && git commit -m \"Changes `7/10/2025`\" && git remote -v && git push -f && git push origin main"
+    "save": "git add . && git commit -m \"Changes 7-10-2025\" && git remote -v && git push -f && git push origin main"
   },
   "type": "module",
   "keywords": [],
