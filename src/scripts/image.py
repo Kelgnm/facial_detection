@@ -71,98 +71,92 @@ for person_name in os.listdir(image_dir):
                 known_face_encodings.append(encodings[0])
                 known_face_names.append(person_name)
 
-while True:
-    # capture frame-by-frame
-    ret, frame = img.read()
-    # gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
-    # faces = face_classifier.detectMultiScale(gray, scaleFactor=1.2, minNeighbors=5, minSize=(20, 20))
+# capture frame-by-frame
+ret, frame = img.read()
+img.release()
+# gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
+# faces = face_classifier.detectMultiScale(gray, scaleFactor=1.2, minNeighbors=5, minSize=(20, 20))
 
-    if not ret:
-        print(json.dumps({"seen": "null", "error": "no frame captured"}))
-        sys.stdout.flush()
-        break
+if not ret:
+    print(json.dumps({"seen": "null", "error": "no frame captured"}))
+    sys.stdout.flush()
+    sys.exit(1)
 
-    if processed:
+if processed:
 
-        small_frame = cv.resize(frame, (0, 0), fx=0.25, fy=0.25)
+    small_frame = cv.resize(frame, (0, 0), fx=0.25, fy=0.25)
 
-        rgb_frame = np.ascontiguousarray(small_frame[:, :, ::-1])
+    rgb_frame = np.ascontiguousarray(small_frame[:, :, ::-1])
 
-        face_locations = face_recognition.face_locations(rgb_frame)
-        face_encodings = face_recognition.face_encodings(rgb_frame, face_locations)
+    face_locations = face_recognition.face_locations(rgb_frame)
+    face_encodings = face_recognition.face_encodings(rgb_frame, face_locations)
 
-        face_names = []
-        face_closer = []
-        detected = None
-        for face_encoding in face_encodings:
-            matches = face_recognition.compare_faces(known_face_encodings, face_encoding)
-            name = "Unknown"
-            closer = 0.0
+    face_names = []
+    face_closer = []
+    Threshhold = 0.45
+
+
+    for face_encoding in face_encodings:
+        matches = face_recognition.compare_faces(known_face_encodings, face_encoding)
+        if len(matches):
+            face_names.append("Unknown")
+            face_closer.append(0.0)
+            continue
         
-            face_distances = face_recognition.face_distance(known_face_encodings, face_encoding)
-            best_match = np.argmin(face_distances)
-            if matches[best_match]:
-                name = known_face_names[best_match]
-                person_data = metadata.get(name.lower(), {})
-                closer = 1.0 - face_distances[best_match]
+        face_distances = face_recognition.face_distance(known_face_encodings, face_encoding)
+        best_match = np.argmin(face_distances)
+        best_distances = matches[best_match]
 
-                face_names.append(name)
-                face_closer.append(closer)
-                detected = name
-            else:
-                face_names.append("Unknown")
-            
-    processed = not processed
+        if best_distances < Threshhold:
+            name = known_face_names[best_match]
+            person_data = metadata.get(name.lower(), {})
+            face_closer.append(1.0 - best_distances)
+        else:
+            face_names.append(name)
+            face_closer.append(0.0)
+
+processed = not processed
+
+# if face_names:
+#     print(json.dumps({"seen": face_names[0]}))  # only one result
+#     sys.stdout.flush()
+#     break
+
+# if person_data and name not in seen_people:
+#     print(f"[INFO] {name} - {person_data['role']}")
+#     print(f"Facebook: {person_data['facebook']}")
+#     print(f"Camera has seen {name}")
+#     seen_people.add(name)
+
+
+for(top, right, bottom, left), name in zip(face_locations, face_names):
     
-    # if face_names:
-    #     print(json.dumps({"seen": face_names[0]}))  # only one result
-    #     sys.stdout.flush()
-    #     break
+    # roi_gray = gray[y:y+h, x:x+w]
+    # roi_color = frame[y:y+h, x:x+w]
+    #print(x,y,w,h)        
+    top *= 4
+    right *= 4
+    bottom *= 4
+    left *= 4
 
-    # if person_data and name not in seen_people:
-    #     print(f"[INFO] {name} - {person_data['role']}")
-    #     print(f"Facebook: {person_data['facebook']}")
-    #     print(f"Camera has seen {name}")
-    #     seen_people.add(name)
+    # recognizer
+    # id_, conf = recognizer.predict(roi_gray)
+    # if conf >= 4  and conf <= 85:
+        #print(id_)
+    cv.rectangle(frame, (left, top), (right, bottom), (0, 0, 255), 2)
+    cv.rectangle(frame, (left, bottom - 35), (right, bottom), (0, 0, 255), cv.FILLED)
+    font = cv.FONT_HERSHEY_DUPLEX
+    cv.putText(frame, name, (left + 6, bottom), font, 1.0, (255, 255, 255), 1)
+    # BOX TO CAPTURE MY FACE
+    
+    # img_item = "my-image.png"
+    # cv.imwrite(img_item, roi_gray)
 
+#     # if it fucking exists
 
-    for(top, right, bottom, left), name in zip(face_locations, face_names):
-        
-        # roi_gray = gray[y:y+h, x:x+w]
-        # roi_color = frame[y:y+h, x:x+w]
-        #print(x,y,w,h)        
-        top *= 4
-        right *= 4
-        bottom *= 4
-        left *= 4
-
-        # recognizer
-        # id_, conf = recognizer.predict(roi_gray)
-        # if conf >= 4  and conf <= 85:
-            #print(id_)
-        cv.rectangle(frame, (left, top), (right, bottom), (0, 0, 255), 2)
-        cv.rectangle(frame, (left, bottom - 35), (right, bottom), (0, 0, 255), cv.FILLED)
-        font = cv.FONT_HERSHEY_DUPLEX
-        cv.putText(frame, name, (left + 6, bottom), font, 1.0, (255, 255, 255), 1)
-        # BOX TO CAPTURE MY FACE
-        
-        # img_item = "my-image.png"
-        # cv.imwrite(img_item, roi_gray)
-
-    #     # if it fucking exists
-
-    # _, buffer = cv.imencode('.png', frame)
-    # frame_base64 = base64.b64encode(buffer).decode('utf-8')
-    # ws.send(json.dumps({"frame": frame_base64, "seen": face_names[0] if face_names else "Unknown"}))
-
-
-        
-
-
-
-    cv.imshow("Work dammit", frame)
-    if cv.waitKey(1) & 0xff == ord('q'):
-        break
+# _, buffer = cv.imencode('.png', frame)
+# frame_base64 = base64.b64encode(buffer).decode('utf-8')
+# ws.send(json.dumps({"frame": frame_base64, "seen": face_names[0] if face_names else "Unknown"}))
 
 if face_names and any(name != "Unknown" for name in face_names):
     valid = [i for i, name in enumerate(face_names) if name != "Unknown"]
@@ -172,12 +166,13 @@ if face_names and any(name != "Unknown" for name in face_names):
     else:
         selected = None
 
-img.release()
-cv.destroyAllWindows()
 if face_names:
     print(json.dumps({"seen": face_names[0]}))
 else:
     print(json.dumps({"seen": None}))
+
+sys.stdout.flush()
+sys.exit(0)
 
 # if __name__ == "__main__":
 #     ws = websocket.WebSocketApp("ws://localhost:3001", on_open=on_open)

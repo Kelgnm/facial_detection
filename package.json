@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "save": "git add . && git commit -m \"Changes 7-10-2025\" && git remote -v && git push -f && git push origin main"
+    "save": "git add . && git commit -m \"Changes 7-11-2025\" && git remote -v && git push -f && git push origin main"
   },
   "type": "module",
   "keywords": [],
@@ -20,7 +20,10 @@
   "dependencies": {
     "express": "^5.1.0",
     "express-session": "^1.18.1",
+    "next": "^15.3.5",
     "open": "^10.1.2",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
     "ws": "^8.18.3"
   },
   "license": "MIT"
