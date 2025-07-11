@@ -5,175 +5,85 @@ import numpy as np
 import pickle
 import face_recognition
 import json
-# import websocket
-# import base64
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+image_dir = os.path.join(BASE_DIR, "images")
+threshold = 0.6  # Confidence threshold for face recognition
 
+# Load metadata (optional)
 with open(os.path.join(BASE_DIR, "data.json"), "r") as f:
     metadata = json.load(f)
 
-# recognizer = cv.face.LBPHFaceRecognizer_create()
-# recognizer.read("trainner.yml")
-
-
-# labels = {"person_name": 1}
+# Load saved encodings
 with open(os.path.join(BASE_DIR, "labels.pickle"), 'rb') as file:
     data = pickle.load(file)
     known_face_encodings = data["encodings"]
     known_face_names = data["names"]
 
-# def on_open(ws):
-#     sys.stderr.write("WebSocket connected\n")
-#     run(ws)
-
-# def run(ws):
-ip = "rtsp://admin:Hik123456@192.168.10.135:554/Streaming/Channels/102/"
-img = cv.VideoCapture(1)
-
-image_dir = os.path.join(BASE_DIR, "images")
-
-# kamen = face_recognition.load_image_file("images/kamen_1/Kamen.png")
-# kamen_encoded = face_recognition.face_encodings(kamen)[0]
-
-# stile = face_recognition.load_image_file("images/stiliyan-penchev/Stile.png")
-# stilde_encoded = face_recognition.face_encodings(stile)[0]
-
-# face_classifier = cv.CascadeClassifier(
-#     cv.data.haarcascades + "haarcascade_frontalface_default.xml"
-# )
-
-# if not img.isOpened():
-#     print("No streaming :(, existing. . .")
-#     exit()
-
-known_face_encodings = []
-known_face_names = []
-
-# person_data = {}
-# seen_people = set()
-face_locations = []
-face_encodings = []
-face_names = []
-processed = True
-
+# Optionally re-encode images from folders
 for person_name in os.listdir(image_dir):
-        person_folder = os.path.join(image_dir, person_name)
-        if not os.path.isdir(person_folder):
-            continue
+    person_folder = os.path.join(image_dir, person_name)
+    if not os.path.isdir(person_folder):
+        continue
+    for filename in os.listdir(person_folder):
+        image_path = os.path.join(person_folder, filename)
+        image = face_recognition.load_image_file(image_path)
+        encodings = face_recognition.face_encodings(image)
+        if encodings:
+            known_face_encodings.append(encodings[0])
+            known_face_names.append(person_name)
 
-        for filename in os.listdir(person_folder):
-            image_path = os.path.join(person_folder, filename)
-            image = face_recognition.load_image_file(image_path)
-            encodings = face_recognition.face_encodings(image)
-
-            if len(encodings) > 0:
-                known_face_encodings.append(encodings[0])
-                known_face_names.append(person_name)
-
-# capture frame-by-frame
-ret, frame = img.read()
-img.release()
-# gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
-# faces = face_classifier.detectMultiScale(gray, scaleFactor=1.2, minNeighbors=5, minSize=(20, 20))
-
-if not ret:
-    print(json.dumps({"seen": "null", "error": "no frame captured"}))
+# Open camera (adjust index as needed)
+img = cv.VideoCapture(1)
+if not img.isOpened():
+    print(json.dumps({"seen": None, "error": "Camera not opened"}))
     sys.stdout.flush()
     sys.exit(1)
 
-if processed:
+ret, frame = img.read()
+img.release()
 
-    small_frame = cv.resize(frame, (0, 0), fx=0.25, fy=0.25)
+if not ret:
+    print(json.dumps({"seen": None, "error": "No frame captured"}))
+    sys.stdout.flush()
+    sys.exit(1)
 
-    rgb_frame = np.ascontiguousarray(small_frame[:, :, ::-1])
+# Resize + convert frame
+small_frame = cv.resize(frame, (0, 0), fx=0.25, fy=0.25)
+rgb_frame = np.ascontiguousarray(small_frame[:, :, ::-1])
 
-    face_locations = face_recognition.face_locations(rgb_frame)
-    face_encodings = face_recognition.face_encodings(rgb_frame, face_locations)
+# Detect faces and encode
+face_locations = face_recognition.face_locations(rgb_frame)
+face_encodings = face_recognition.face_encodings(rgb_frame, face_locations)
 
-    face_names = []
-    face_closer = []
-    Threshhold = 0.45
+face_names = []
+face_closer = []
 
+for face_encoding in face_encodings:
+    face_distances = face_recognition.face_distance(known_face_encodings, face_encoding)
+    if not len(face_distances):
+        continue
 
-    for face_encoding in face_encodings:
-        matches = face_recognition.compare_faces(known_face_encodings, face_encoding)
-        if len(matches):
-            face_names.append("Unknown")
-            face_closer.append(0.0)
-            continue
-        
-        face_distances = face_recognition.face_distance(known_face_encodings, face_encoding)
-        best_match = np.argmin(face_distances)
-        best_distances = matches[best_match]
+    best_index = np.argmin(face_distances)
+    confidence = 1.0 - face_distances[best_index]
 
-        if best_distances < Threshhold:
-            name = known_face_names[best_match]
-            person_data = metadata.get(name.lower(), {})
-            face_closer.append(1.0 - best_distances)
-        else:
-            face_names.append(name)
-            face_closer.append(0.0)
-
-processed = not processed
-
-# if face_names:
-#     print(json.dumps({"seen": face_names[0]}))  # only one result
-#     sys.stdout.flush()
-#     break
-
-# if person_data and name not in seen_people:
-#     print(f"[INFO] {name} - {person_data['role']}")
-#     print(f"Facebook: {person_data['facebook']}")
-#     print(f"Camera has seen {name}")
-#     seen_people.add(name)
-
-
-for(top, right, bottom, left), name in zip(face_locations, face_names):
-    
-    # roi_gray = gray[y:y+h, x:x+w]
-    # roi_color = frame[y:y+h, x:x+w]
-    #print(x,y,w,h)        
-    top *= 4
-    right *= 4
-    bottom *= 4
-    left *= 4
-
-    # recognizer
-    # id_, conf = recognizer.predict(roi_gray)
-    # if conf >= 4  and conf <= 85:
-        #print(id_)
-    cv.rectangle(frame, (left, top), (right, bottom), (0, 0, 255), 2)
-    cv.rectangle(frame, (left, bottom - 35), (right, bottom), (0, 0, 255), cv.FILLED)
-    font = cv.FONT_HERSHEY_DUPLEX
-    cv.putText(frame, name, (left + 6, bottom), font, 1.0, (255, 255, 255), 1)
-    # BOX TO CAPTURE MY FACE
-    
-    # img_item = "my-image.png"
-    # cv.imwrite(img_item, roi_gray)
-
-#     # if it fucking exists
-
-# _, buffer = cv.imencode('.png', frame)
-# frame_base64 = base64.b64encode(buffer).decode('utf-8')
-# ws.send(json.dumps({"frame": frame_base64, "seen": face_names[0] if face_names else "Unknown"}))
-
-if face_names and any(name != "Unknown" for name in face_names):
-    valid = [i for i, name in enumerate(face_names) if name != "Unknown"]
-    if valid:
-        best_index = valid[np.argmax([face_closer[i] for i in valid])]
-        selected = face_names[best_index]
+    if confidence >= threshold:
+        name = known_face_names[best_index]
     else:
-        selected = None
+        name = "Unknown"
 
-if face_names:
-    print(json.dumps({"seen": face_names[0]}))
-else:
-    print(json.dumps({"seen": None}))
+    face_names.append(name)
+    face_closer.append(confidence)
 
+# Determine best match (if any)
+selected = None
+if face_names and any(name != "Unknown" for name in face_names):
+    valid_indices = [i for i, name in enumerate(face_names) if name != "Unknown"]
+    if valid_indices:
+        best_valid_index = valid_indices[np.argmax([face_closer[i] for i in valid_indices])]
+        selected = face_names[best_valid_index]
+
+# Final result to frontend
+print(json.dumps({"seen": selected}))
 sys.stdout.flush()
 sys.exit(0)
-
-# if __name__ == "__main__":
-#     ws = websocket.WebSocketApp("ws://localhost:3001", on_open=on_open)
-#     ws.run_forever()

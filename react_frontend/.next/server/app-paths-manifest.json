@@ -1,4 +1,6 @@
 {
   "/api/detect/route": "app/api/detect/route.js",
-  "/page": "app/page.js"
+  "/_not-found/page": "app/_not-found/page.js",
+  "/page": "app/page.js",
+  "/kamen_1/page": "app/kamen_1/page.js"
 }
