@@ -7,23 +7,58 @@ import { motion } from 'framer-motion';
 
 export default function App() {
   const [name, setName] = useState<string>('Guest');
-  const [displayedName, setDisplayedName] = useState<string>('');
+  const [displayedName, setDisplayedName] = useState('');
+  const [recognized, setRecognized] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
+  const detected = async () => {
+    setLoading(true);
+    setErrorMsg('');
+    setRecognized(false);
+    setDisplayedName('');
+    setName('Guest');
+    localStorage.removeItem('recognizedName');
+    try {
+      const res = await fetch('/api/detect');
+      const data = await res.json();
+
+      if (data.seen) {
+        localStorage.setItem('recognizedName', data.seen);
+        setName(data.seen)
+        setRecognized(true);
+      } else {
+        setErrorMsg('Face not recognized. Please try again.');
+      }
+    } catch (error) {
+      console.error('Detection error:', error);
+      setErrorMsg('Error running Python script');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     const stored = localStorage.getItem('recognizedName');
-    if (stored) setName(stored);
+    if (stored) {
+       setName(stored)  
+    }
+    const timeout = setTimeout(() => {
+      detected();
+    }, 1500);
+
+    return () => clearTimeout(timeout);
   }, []);
 
   useEffect(() => {
-    if (!name || name === '') return;
+    if (!name) return;
 
     setDisplayedName('');
     let i = 0;
+
     const interval = setInterval(() => {
-      if (i <= name.length) {
+      if (i < name.length) {
           setDisplayedName((prev) => prev + name.charAt(i))
           i++;
       } else {
@@ -34,25 +69,7 @@ export default function App() {
     return () => clearInterval(interval);
   }, [name]);
 
-  const detected = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch('/api/detect');
-      const data = await res.json();
 
-      if (data.seen) {
-        localStorage.setItem('recognizedName', data.seen);
-        router.push(`/${data.seen.toLowerCase()}?name=${data.seen}`);
-      } else {
-        alert('Face not recognized');
-      }
-    } catch (error) {
-      console.error('Detection error:', error);
-      alert('Error running Python script');
-    } finally {
-      setLoading(false);
-    }
-  };
 
 const MotionBox = motion(Box);
 const MotionText = motion(Text);
@@ -80,18 +97,33 @@ const MotionText = motion(Text);
              </MotionText>
             </Heading>
             
-            <Button colorScheme="red" 
-            onClick={detected}
-            disabled={loading}
-            className='px-4 py-2 bg-blue-600 text-white rounded'>
-              {loading ? "Scanning..." : "Start Detection"}
-            </Button>
+            {recognized ? (
+              <Button
+                colorScheme="green"
+                onClick={() => router.push(`/${name.toLowerCase()}?name=${name}`)}
+                size="lg"
+              >
+                Proceed 
+              </Button>
+            ) : (
+              <>
+                {loading ? (
+                  <Text fontSize="lg" color="gray.500">
+                    Scanning face...
+                  </Text>
+                ) : (
+                  <Text fontSize="lg" color="red.500">
+                    {errorMsg}
+                  </Text>
+                )}
+              </>
+            )}
 
-            <Button colorScheme="red" onClick={() => {
-              localStorage.setItem('recognizedName', 'Guest');
-              window.location.reload();
-            }}>
-              Reset
+            <Button colorScheme="blue" onClick={detected}>
+              Try Detect Again
+            </Button>
+            <Button colorScheme="red" onClick={() => router.push(`/register`)}>
+              Register!
             </Button>
         </VStack>
       </MotionBox>

@@ -18,8 +18,12 @@
     "typescript": "^5.8.3"
   },
   "dependencies": {
+    "@chakra-ui/react": "^3.22.0",
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
     "express": "^5.1.0",
     "express-session": "^1.18.1",
+    "framer-motion": "^12.23.5",
     "next": "^15.3.5",
     "open": "^10.1.2",
     "react": "^19.1.0",

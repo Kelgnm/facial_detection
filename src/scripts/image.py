@@ -8,19 +8,16 @@ import json
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 image_dir = os.path.join(BASE_DIR, "images")
-threshold = 0.6  # Confidence threshold for face recognition
+threshold = 0.6
 
-# Load metadata (optional)
 with open(os.path.join(BASE_DIR, "data.json"), "r") as f:
     metadata = json.load(f)
 
-# Load saved encodings
 with open(os.path.join(BASE_DIR, "labels.pickle"), 'rb') as file:
     data = pickle.load(file)
     known_face_encodings = data["encodings"]
     known_face_names = data["names"]
 
-# Optionally re-encode images from folders
 for person_name in os.listdir(image_dir):
     person_folder = os.path.join(image_dir, person_name)
     if not os.path.isdir(person_folder):
@@ -33,8 +30,8 @@ for person_name in os.listdir(image_dir):
             known_face_encodings.append(encodings[0])
             known_face_names.append(person_name)
 
-# Open camera (adjust index as needed)
 img = cv.VideoCapture(1)
+
 if not img.isOpened():
     print(json.dumps({"seen": None, "error": "Camera not opened"}))
     sys.stdout.flush()
@@ -48,11 +45,9 @@ if not ret:
     sys.stdout.flush()
     sys.exit(1)
 
-# Resize + convert frame
 small_frame = cv.resize(frame, (0, 0), fx=0.25, fy=0.25)
 rgb_frame = np.ascontiguousarray(small_frame[:, :, ::-1])
 
-# Detect faces and encode
 face_locations = face_recognition.face_locations(rgb_frame)
 face_encodings = face_recognition.face_encodings(rgb_frame, face_locations)
 
@@ -75,7 +70,6 @@ for face_encoding in face_encodings:
     face_names.append(name)
     face_closer.append(confidence)
 
-# Determine best match (if any)
 selected = None
 if face_names and any(name != "Unknown" for name in face_names):
     valid_indices = [i for i, name in enumerate(face_names) if name != "Unknown"]
@@ -83,7 +77,6 @@ if face_names and any(name != "Unknown" for name in face_names):
         best_valid_index = valid_indices[np.argmax([face_closer[i] for i in valid_indices])]
         selected = face_names[best_valid_index]
 
-# Final result to frontend
 print(json.dumps({"seen": selected}))
 sys.stdout.flush()
-sys.exit(0)
+sys.exit(1)

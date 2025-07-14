@@ -1,35 +1,55 @@
+import cv2
 import os
-import cv2 as cv
+import sys
+import json
+import time
+from PIL import Image
 
-img = cv.VideoCapture(0)
-img.set(3,640) # set Width
-img.set(4,480) # set Height
+# Read arguments
+user_id = sys.argv[1]
+name = sys.argv[2]
 
-face_cascade = cv.CascadeClassifier(
-    cv.data.haarcascades + "haarcascade_frontalface_default.xml"
-)
+# Folder where images will be stored
+base_dir = os.path.join(os.path.dirname(__file__), "images")
+user_dir = os.path.join(base_dir, name)
 
-face_id = input('\n enter user id end press <return> ==>  ')
-face_name = input('\n enter user name end press <return> ==>  ')
-print("\n [INFO] Initializing face capture. Look the camera and wait ...")
+# Create directory if it doesn't exist
+os.makedirs(user_dir, exist_ok=True)
 
-ids_ = 0
+# Start webcam
+cap = cv2.VideoCapture(1)
+if not cap.isOpened():
+    print(json.dumps({ "status": "error", "message": "Cannot open camera" }))
+    sys.exit(1)
 
-while True:
-    ret, frame = img.read()
-    gray = cv.cvtColor(frame, cv.COLOR_BGRA2GRAY)
-    faces = face_cascade.detectMultiScale(gray, 1.3, 5)
-    for (x,y,w,h) in faces:
-        cv.rectangle(frame, (x,y), (x+w,y+h), (255, 0, 0), 2)
-        ids_ += 1
-        cv.imwrite(str(face_name) + str(face_id) + '.' + str(ids_) + ".png", gray[y:y+h, x:x+w])
-        cv.imshow("yea", frame)
-    k = cv.waitKey(100) & 0xff
-    if k == 27:
-        break
-    elif ids_ >= 30:
-        break
+count = 0
+captured_ids = []
 
-print("\n [INFO] Exiting Program and cleanup stuff")
-img.release()
-cv.destroyAllWindows()
+while count < 30:
+    ret, frame = cap.read()
+    if not ret:
+        print(json.dumps({ "status": "error", "message": "Failed to grab frame" }))
+        sys.exit(1)
+
+    img_filename = f"{int(time.time())}.png" 
+    img_path = os.path.join(user_dir, img_filename)
+    cv2.imwrite(img_path, frame)
+    captured_ids.append(img_filename)
+
+    count += 1
+    cv2.waitKey(100)
+
+
+if captured_ids in user_dir:
+    print("Its the same picture, stopping recording")
+    sys.exit(1)
+
+cap.release()
+
+
+print(json.dumps({
+    "status": "success",
+    "message": f"Captured {count} images for {name}",
+    "files": captured_ids
+}))
+sys.stdout.flush()
