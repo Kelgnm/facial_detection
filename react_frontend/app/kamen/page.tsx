@@ -2,7 +2,6 @@
 
 import {useEffect, useState, useRef} from 'react';
 import {useRouter, useSearchParams} from 'next/navigation';
-import NextLink from 'next/link'
 import {
   Link,
   Container,

@@ -4,15 +4,16 @@ import path from 'path';
 
 export async function POST(req: NextRequest) {
   try {
-    const { name, id } = await req.json();
+    const { name, id, role, password } = await req.json();
     const userID = Date.now().toString();
 
-    if (!name || !id) {
-      return NextResponse.json({ success: false, message: 'Name or ID is missing' }, { status: 400 });
+    if (!name || !id || !role || !password) {
+      return NextResponse.json({ success: false, message: 'Missing required stuff' }, { status: 400 });
     }
 
     const scriptPath = path.join(process.cwd(), '..', 'src', 'scripts', 'face_detect.py');
-    const register = spawn('python', [scriptPath, userID, name]);
+    const dataJson = path.join(process.cwd(), 'react_frontend', 'public', 'scripts', 'data.json');
+    const register = spawn('python', [scriptPath, userID, name, role, password, dataJson]);
 
     let output = '';
     let errorOutput = '';
@@ -30,16 +31,24 @@ export async function POST(req: NextRequest) {
       register.on('close', resolve);
     });
 
-    console.log('Script exited with code:', exitCode);
-    console.log('Script stdout:', output);
-    console.log('Script stderr:', errorOutput);
+    console.log('Script output:', output); // Optional: Debug line
+
+    // ✅ Check output AFTER it's fully collected
+    const match = output.match(/\{[\s\S]*\}/);
+    if (!match) {
+      console.error('No JSON in output:', output);
+      return NextResponse.json({
+        success: false,
+        message: 'No valid JSON output from Python script'
+      }, { status: 500 });
+    }
 
     let result;
 
     try {
-      result = JSON.parse(output);
+      result = JSON.parse(match[0]); // only parse the matched JSON part
     } catch (err) {
-      console.error('Failed to parse output as JSON:', output);
+      console.error('Failed to parse JSON:', output);
       return NextResponse.json({
         success: false,
         message: 'Invalid response from Python script'

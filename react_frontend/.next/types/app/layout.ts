@@ -1,4 +1,4 @@
-// File: D:\boggos_binted\react_frontend\app\layout.tsx
+// File: D:\facial_detection\react_frontend\app\layout.tsx
 import * as entry from '../../../app/layout.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

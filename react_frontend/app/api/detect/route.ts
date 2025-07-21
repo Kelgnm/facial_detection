@@ -26,7 +26,7 @@ function runPythonScript(): Promise<any> {
         reject(new Error('Invalid JSON output'));
       }
     });
-  });
+  });  
 }
 
 

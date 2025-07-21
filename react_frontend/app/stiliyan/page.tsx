@@ -27,6 +27,7 @@ export default function UserPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const [role, setRole] = useState<string>('Unknown');
+    const [showRole, setShowRole] = useState(false);
     const [name, setName] = useState<string>('Guest');
     const mismatchCountRef = useRef(0);
 
@@ -44,10 +45,16 @@ export default function UserPage() {
         fetch('/scripts/data.json')
             .then((res) => res.json())
             .then((data: PersonData) => {
-                const person = data[paramName.toLowerCase()];
-                if (person?.role) setRole(person.role);
+                const person = (paramName || stored)?.toLowerCase();
+                if (person) {
+                    const key = data[person];
+                    if(key?.role) setRole(key.role);
+                }
             });
-
+        
+        const toggle = setInterval(() => {
+            setShowRole(prev => !prev);
+        }, 2000)
         const interval = setInterval(async () => {
             try {
                 const res = await fetch('/api/detect');
@@ -60,8 +67,8 @@ export default function UserPage() {
 
                     if (mismatchCountRef.current >= 1) {
                         alert('Logging out');
-                        localStorage.removeItem('recognizedName');
                         clearInterval(interval);
+                        localStorage.removeItem('recognizedName');
                         router.push('/');
                     }
                 } else {
@@ -96,7 +103,7 @@ export default function UserPage() {
                     color="blue.500"
                     fontSize="2x1"
                     ml={2}>
-                     {name}
+                     {showRole ? role : name}
                     <motion.span
                     animate={{ opacity: [0, 1, 0] }}
                     transition={{ repeat: Infinity, duration: 1 }}

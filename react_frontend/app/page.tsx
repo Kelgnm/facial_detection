@@ -1,12 +1,16 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Box, Heading, Button, Text, VStack, Center, Spinner } from '@chakra-ui/react';
+import { useRouter, notFound } from 'next/navigation';
+import { Box, Heading, Button, Text, VStack, Center, Spinner, Input } from '@chakra-ui/react';
 import { motion } from 'framer-motion';
 
 export default function App() {
   const [name, setName] = useState<string>('Guest');
+  const [requirePassword, setRequirePassword] = useState(false);
+  const [password, setPassword] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [detectedPassword, setDetectedPassword] = useState<string | null>(null);
   const [displayedName, setDisplayedName] = useState('');
   const [recognized, setRecognized] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -19,7 +23,10 @@ export default function App() {
     setRecognized(false);
     setDisplayedName('');
     setName('Guest');
+    setRequirePassword(false);
+    setDetectedPassword(null);
     localStorage.removeItem('recognizedName');
+
     try {
       const res = await fetch('/api/detect');
       const data = await res.json();
@@ -28,6 +35,8 @@ export default function App() {
         localStorage.setItem('recognizedName', data.seen);
         setName(data.seen)
         setRecognized(true);
+        setDetectedPassword(data.password);
+        setRequirePassword(true);
       } else {
         setErrorMsg('Face not recognized. Please try again.');
       }
@@ -39,35 +48,47 @@ export default function App() {
     }
   };
 
-  useEffect(() => {
-    const stored = localStorage.getItem('recognizedName');
-    if (stored) {
-       setName(stored)  
-    }
-    const timeout = setTimeout(() => {
-      detected();
-    }, 1500);
+    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+      e.preventDefault();
 
-    return () => clearTimeout(timeout);
-  }, []);
-
-  useEffect(() => {
-    if (!name) return;
-
-    setDisplayedName('');
-    let i = 0;
-
-    const interval = setInterval(() => {
-      if (i < name.length) {
-          setDisplayedName((prev) => prev + name.charAt(i))
-          i++;
+      if (password === detectedPassword) {
+        setPasswordError('');
+        router.push(`/${name.toLowerCase()}`);
       } else {
-        clearInterval(interval);
+        setPasswordError('Incorrect password');
       }
-    }, 150);
+    };
 
-    return () => clearInterval(interval);
-  }, [name]);
+useEffect(() => {
+  const stored = localStorage.getItem('recognizedName');
+  if (stored) {
+      setName(stored)  
+  }
+  const timeout = setTimeout(() => {
+    detected();
+  }, 1500);
+
+  return () => clearTimeout(timeout);
+}, []);
+
+useEffect(() => {
+  if (!name) return;
+  let i = 0;
+  let current = '';
+  setDisplayedName('');
+
+  const interval = setInterval(() => {
+    if (i < name.length) {
+        current += name[i];
+        setDisplayedName(current);
+        i++;
+    } else {
+      clearInterval(interval);
+    }
+  }, 150);
+
+  return () => clearInterval(interval);
+}, [name]);
 
 
 
@@ -86,7 +107,7 @@ const MotionText = motion(Text);
             fontWeight="bold"
             color="blue.500"
             fontSize="2x1"
-            ml={2}>
+            ml={1}>
              {displayedName}
             <motion.span
             animate={{ opacity: [0, 1, 0] }}
@@ -98,26 +119,52 @@ const MotionText = motion(Text);
             </Heading>
             
             {recognized ? (
-              <Button
-                colorScheme="green"
-                onClick={() => router.push(`/${name.toLowerCase()}?name=${name}`)}
-                size="lg"
-              >
-                Proceed 
-              </Button>
+              <Text fontSize="lg" color="green.500">
+                Face recognized!
+              </Text>
+            ) : loading ? (
+              <Text fontSize="lg" color="gray.500">
+                Scanning face...
+              </Text>
             ) : (
-              <>
-                {loading ? (
-                  <Text fontSize="lg" color="gray.500">
-                    Scanning face...
-                  </Text>
-                ) : (
-                  <Text fontSize="lg" color="red.500">
-                    {errorMsg}
+              <Text fontSize="lg" color="red.500">
+                {errorMsg}
+              </Text>
+            )}
+
+            {requirePassword && (
+              <form onSubmit={handleSubmit}
+              >
+                <Input 
+                  type="text" 
+                  name="username" 
+                  value={name} 
+                  readOnly 
+                  style={{ position: 'absolute', left: '-9999px', height: 0, width: 0, overflow: 'hidden' }}
+                  autoComplete="username"
+                />
+
+                <Input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  autoComplete="current-password"
+                  name="password"
+                  required
+                  mt={2}
+                />
+                <Button mt={4} colorScheme="green" type="submit" alignItems="center">
+                  Verify
+                </Button>
+                {passwordError && (
+                  <Text color="red.500" mt={2}>
+                    {passwordError}
                   </Text>
                 )}
-              </>
+              </form>
+
             )}
+
 
             <Button colorScheme="blue" onClick={detected}>
               Try Detect Again

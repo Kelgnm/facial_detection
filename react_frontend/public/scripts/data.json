@@ -1,11 +1,17 @@
 {
-    "kamen": {
-        "name": "Kamen Iliev",
-        "role": "Software Engineer"
-    },
-    "stiliyan": {
-        "name": "Stiliyan Penchev",
-        "facebook": "https://facebook.com/stile.penchev",
-        "role": "CEO"
-    }
+  "kamen": {
+    "name": "Kamen Iliev",
+    "facebook": "https://facebook.com/kamen",
+    "role": "Software Engineer"
+  },
+  "stelko": {
+    "name": "stelko",
+    "role": "YEEAA",
+    "password": "da"
+  },
+  "stiliyan": {
+    "name": "stiliyan",
+    "role": "CEO",
+    "password": "1"
+  }
 }

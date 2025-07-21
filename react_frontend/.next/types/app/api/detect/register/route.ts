@@ -1,4 +1,4 @@
-// File: D:\boggos_binted\react_frontend\app\api\detect\register\route.ts
+// File: D:\facial_detection\react_frontend\app\api\detect\register\route.ts
 import * as entry from '../../../../../../app/api/detect/register/route.js'
 import type { NextRequest } from 'next/server.js'
 
