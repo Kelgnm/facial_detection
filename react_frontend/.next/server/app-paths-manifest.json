@@ -1,4 +1,8 @@
 {
-  "/api/detect/register/route": "app/api/detect/register/route.js",
-  "/register/page": "app/register/page.js"
+  "/api/detect/route": "app/api/detect/route.js",
+  "/page": "app/page.js",
+  "/kamen/page": "app/kamen/page.js",
+  "/register/page": "app/register/page.js",
+  "/stiliyan/page": "app/stiliyan/page.js",
+  "/[username]/page": "app/[username]/page.js"
 }

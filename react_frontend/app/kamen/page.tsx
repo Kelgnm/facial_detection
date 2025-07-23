@@ -43,7 +43,7 @@ export default function UserPage() {
         fetch('/scripts/data.json')
             .then((res) => res.json())
             .then((data: PersonData) => {
-                const person = data[paramName.toLowerCase()];
+                const person = data[paramName];
                 if (person?.role) setRole(person.role);
             });
 

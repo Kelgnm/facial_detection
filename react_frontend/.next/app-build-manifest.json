@@ -1,14 +1,29 @@
 {
   "pages": {
+    "/layout": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/layout.js"
+    ],
+    "/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/page.js"
+    ],
+    "/[username]/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/[username]/page.js"
+    ],
     "/api/detect/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/api/detect/route.js"
     ],
-    "/layout": [
+    "/kamen/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/layout.js"
+      "static/chunks/app/kamen/page.js"
     ],
     "/register/page": [
       "static/chunks/webpack.js",
@@ -20,10 +35,10 @@
       "static/chunks/main-app.js",
       "static/chunks/app/api/detect/register/route.js"
     ],
-    "/page": [
+    "/stiliyan/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/page.js"
+      "static/chunks/app/stiliyan/page.js"
     ]
   }
 }

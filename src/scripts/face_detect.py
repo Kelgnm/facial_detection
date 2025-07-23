@@ -22,32 +22,6 @@ base_dir = os.path.join(os.path.dirname(__file__), "images")
 user_dir = os.path.join(base_dir, name)
 data_path = os.path.join(os.path.dirname(__file__), "../../react_frontend/public/scripts/data.json")
 
-known_face_encodings = []
-known_face_names = []
-
-for person_name in os.listdir(base_dir):
-    person_dir = os.path.join(base_dir, person_name)
-    if not os.path.isdir(person_dir):
-        continue
-
-    for filename in os.listdir(person_dir):
-        if filename.lower().endswith((".png", ".jpg")):
-            filepath = os.path.join(person_dir, filename)
-            try:
-                image = face_recognition.load_image_file(filepath)
-                encodings = face_recognition.face_encodings(image)
-                if encodings:
-                    known_face_encodings.append(encodings[0])
-                    known_face_names.append(person_name)
-            except Exception as e:
-                continue
-
-with open(os.path.join(os.path.dirname(__file__), "encodings.pkl"), "wb") as f:
-    pickle.dump({
-        "encodings": known_face_encodings,
-        "names": known_face_names
-    }, f)
-
 
 if not os.path.exists(data_path):
     with open(data_path, 'w') as filee:
@@ -170,6 +144,32 @@ while count < 30:
     cv.waitKey(100)
 
 img.release()
+
+known_face_encodings = []
+known_face_names = []
+
+for person_name in os.listdir(base_dir):
+    person_dir = os.path.join(base_dir, person_name)
+    if not os.path.isdir(person_dir):
+        continue
+
+    for filename in os.listdir(person_dir):
+        if filename.lower().endswith((".png", ".jpg")):
+            filepath = os.path.join(person_dir, filename)
+            try:
+                image = face_recognition.load_image_file(filepath)
+                encodings = face_recognition.face_encodings(image)
+                for encoding in encodings:
+                    known_face_encodings.append(encoding)
+                    known_face_names.append(person_name)
+            except Exception as e:
+                continue
+
+with open(os.path.join(os.path.dirname(__file__), "encodings.pkl"), "wb") as f:
+    pickle.dump({
+        "encodings": known_face_encodings,
+        "names": known_face_names
+    }, f)
 
 try:
     if os.path.exists(data_path):

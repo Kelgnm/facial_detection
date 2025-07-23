@@ -6,12 +6,14 @@ import pickle
 import face_recognition
 import json
 
+print("Python being used:", sys.executable, file=sys.stderr)
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-image_dir = os.path.join(BASE_DIR, "images")
-threshold = 0.6
+threshold = 0
 
 with open(os.path.join(BASE_DIR, "../../react_frontend/public/scripts/data.json"), "r") as f:
     metadata = json.load(f)
+    print("Loaded metadata keys:", list(metadata.keys()), file=sys.stderr)
 
 known_face_names = []
 known_face_encodings = []
@@ -21,8 +23,9 @@ with open(os.path.join(BASE_DIR, "encodings.pkl"), 'rb') as file:
     known_face_encodings = data["encodings"]
     known_face_names = data["names"]
 
-with open(os.path.join(BASE_DIR, "encodings.pkl"), 'wb') as file:
-    pickle.dump({"encodings": known_face_encodings, "names": known_face_names}, file)
+print(f"Loaded {len(known_face_names)} known face names", file=sys.stderr)
+print(f"Loaded {len(known_face_encodings)} face encodings", file=sys.stderr)
+
 
 img = cv.VideoCapture(1)
 img.set(cv.CAP_PROP_BUFFERSIZE, 1)
@@ -62,14 +65,26 @@ for i in range(5):
         face_closer.append(confidence)
 
     selected = None
-    role = None 
+    role = None
+    password = None
     if face_names and any(name != "Unknown" for name in face_names):
         valid_indices = [i for i, name in enumerate(face_names) if name != "Unknown"]
         if valid_indices:
             best_valid_index = valid_indices[np.argmax([face_closer[i] for i in valid_indices])]
             selected = face_names[best_valid_index]
-            role = metadata.get(selected.lower(), {}).get("role", "Unknown")
 
-    print(json.dumps({"seen": selected, "role": role}))
+            user_data = metadata.get(selected.lower())
+            print(f"[DEBUG] Looking up user: {user_data}", file=sys.stderr)
+            if not user_data:
+                print(f"User '{selected}' not found in metadata", file=sys.stderr)
+            else:
+                role = user_data.get("role", "Unknown")
+                password = user_data.get("password")
+                print(f"[DEBUG] Found user: role={role}, password={password}", file=sys.stderr)
+
+    # print(json.dumps({"seen": "test", "role": "test", "password": "123"}))
+    print(f"Detected {len(face_encodings)} faces in frame", file=sys.stderr)
+    result = {"seen": selected, "role": role, "password": password}
+    print(json.dumps(result))
     sys.stdout.flush()
-    sys.exit(1)
+    sys.exit(0)

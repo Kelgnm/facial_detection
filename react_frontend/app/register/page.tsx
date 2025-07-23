@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Box, Heading, Button, Text, VStack, Center, Input } from '@chakra-ui/react';
+import { PasswordInput } from "../../src/components/ui/password-input"
+import { Box, Heading, Button, Text, Stack, Center, Input, Field } from '@chakra-ui/react';
 
 export default function Register() {
   const [name, setName] = useState('');
@@ -55,65 +56,71 @@ export default function Register() {
      return (
         <Box p={8} maxW="md" mx="auto">
           <form onSubmit={handleRegister}>
-        <VStack>
-          <Heading>Register Your Face</Heading>
+            <Stack>
+              <Heading>Register Your Face</Heading>
 
-          <Input
-            placeholder="Enter your name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            disabled={isLoading || status === 'success'}
-          />
+              <Input
+                placeholder="Enter your name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                disabled={isLoading || status === 'success'}
+              />
 
-          <Input
-            placeholder="Enter your profession"
-            value={profession}
-            onChange={(e) => setProfession(e.target.value)}
-            disabled={isLoading || status === 'success'}
-          />
+              <Input
+                placeholder="Enter your profession"
+                value={profession}
+                onChange={(e) => setProfession(e.target.value)}
+                disabled={isLoading || status === 'success'}
+              />
 
-          <Input
-            type="password"
-            placeholder="Enter your password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            disabled={isLoading || status === 'success'}
-          />
+              {/* <PasswordInput 
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />  */}
 
-          {message && (
-            <Text color={status === 'success' ? 'green.500' : 'red.500'}>
-              {message}
-            </Text>
-          )}
 
-          {status === '' && (
-            <Button
-              type="submit"
-              colorScheme="blue"
-              loading={isLoading}
-              disabled={!name}
-            >
-              Register!
-            </Button>
-          )}
+              <Input
+                type="password"
+                placeholder="Enter your password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={isLoading || status === 'success'}
+              />
 
-          {status === 'success' && (
-            <Button colorScheme="green" onClick={() => router.push('/')}>
-              Return to Home
-            </Button>
-          )}
+              {message && (
+                <Text color={status === 'success' ? 'green.500' : 'red.500'}>
+                  {message}
+                </Text>
+              )}
 
-          {status === 'error' && (
-            <Button
-              colorScheme="red"
-              type="submit"
-              disabled={!name}
-              loading={isLoading}
-            >
-              Retry
-            </Button>
-          )}
-        </VStack>
+              {status === '' && (
+                <Button
+                  type="submit"
+                  colorScheme="blue"
+                  loading={isLoading}
+                  disabled={!name}
+                >
+                  Register!
+                </Button>
+              )}
+
+              {status === 'success' && (
+                <Button colorScheme="green" onClick={() => router.push('/')}>
+                  Return to Home
+                </Button>
+              )}
+
+              {status === 'error' && (
+                <Button
+                  colorScheme="red"
+                  type="submit"
+                  disabled={!name}
+                  loading={isLoading}
+                >
+                  Retry
+                </Button>
+              )}
+            </Stack>
       </form>
     </Box>
 

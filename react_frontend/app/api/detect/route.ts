@@ -11,7 +11,7 @@ function runPythonScript(): Promise<any> {
     });
 
     python.stderr.on('data', (data) => {
-      console.error('Python error:', data.toString());
+      console.error('Python stderr:', data.toString());
     });
 
     python.on('error', (err) => {
@@ -19,10 +19,13 @@ function runPythonScript(): Promise<any> {
     });
 
     python.on('close', (code) => {
+      console.log('Python exited with code:', code);
+      console.log('Raw output:', output);
       try {
         const result = JSON.parse(output.trim());
         resolve(result);
       } catch (err) {
+        console.error('Failed to parse JSON:', output);
         reject(new Error('Invalid JSON output'));
       }
     });

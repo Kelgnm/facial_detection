@@ -1,17 +1,12 @@
 {
   "kamen": {
-    "name": "Kamen Iliev",
+    "name": "kamen iliev",
     "facebook": "https://facebook.com/kamen",
     "role": "Software Engineer"
-  },
-  "stelko": {
-    "name": "stelko",
-    "role": "YEEAA",
-    "password": "da"
   },
   "stiliyan": {
     "name": "stiliyan",
     "role": "CEO",
-    "password": "1"
+    "password": "kokonoki123"
   }
 }

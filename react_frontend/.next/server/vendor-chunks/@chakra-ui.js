@@ -61,6 +61,16 @@ eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpac
 
 /***/ }),
 
+/***/ "(ssr)/./node_modules/@chakra-ui/react/dist/esm/components/center/center.js":
+/*!****************************************************************************!*\
+  !*** ./node_modules/@chakra-ui/react/dist/esm/components/center/center.js ***!
+  \****************************************************************************/
+/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+
+eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   Center: () => (/* binding */ Center)\n/* harmony export */ });\n/* harmony import */ var _styled_system_factory_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../styled-system/factory.js */ \"(ssr)/./node_modules/@chakra-ui/react/dist/esm/styled-system/factory.js\");\n/* __next_internal_client_entry_do_not_use__ Center auto */ \n\nconst Center = (0,_styled_system_factory_js__WEBPACK_IMPORTED_MODULE_0__.chakra)(\"div\", {\n    base: {\n        display: \"flex\",\n        alignItems: \"center\",\n        justifyContent: \"center\"\n    },\n    variants: {\n        inline: {\n            true: {\n                display: \"inline-flex\"\n            }\n        }\n    }\n});\nCenter.displayName = \"Center\";\n\n//# sourceURL=[module]\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiKHNzcikvLi9ub2RlX21vZHVsZXMvQGNoYWtyYS11aS9yZWFjdC9kaXN0L2VzbS9jb21wb25lbnRzL2NlbnRlci9jZW50ZXIuanMiLCJtYXBwaW5ncyI6Ijs7Ozs7NERBQWE7QUFFMkM7QUFFeEQsTUFBTUMsU0FBU0QsaUVBQU1BLENBQUMsT0FBTztJQUMzQkUsTUFBTTtRQUNKQyxTQUFTO1FBQ1RDLFlBQVk7UUFDWkMsZ0JBQWdCO0lBQ2xCO0lBQ0FDLFVBQVU7UUFDUkMsUUFBUTtZQUNOQyxNQUFNO2dCQUNKTCxTQUFTO1lBQ1g7UUFDRjtJQUNGO0FBQ0Y7QUFDQUYsT0FBT1EsV0FBVyxHQUFHO0FBRUgiLCJzb3VyY2VzIjpbIkQ6XFxmYWNpYWxfZGV0ZWN0aW9uXFxyZWFjdF9mcm9udGVuZFxcbm9kZV9tb2R1bGVzXFxAY2hha3JhLXVpXFxyZWFjdFxcZGlzdFxcZXNtXFxjb21wb25lbnRzXFxjZW50ZXJcXGNlbnRlci5qcyJdLCJzb3VyY2VzQ29udGVudCI6WyJcInVzZSBzdHJpY3RcIjtcblwidXNlIGNsaWVudFwiO1xuaW1wb3J0IHsgY2hha3JhIH0gZnJvbSAnLi4vLi4vc3R5bGVkLXN5c3RlbS9mYWN0b3J5LmpzJztcblxuY29uc3QgQ2VudGVyID0gY2hha3JhKFwiZGl2XCIsIHtcbiAgYmFzZToge1xuICAgIGRpc3BsYXk6IFwiZmxleFwiLFxuICAgIGFsaWduSXRlbXM6IFwiY2VudGVyXCIsXG4gICAganVzdGlmeUNvbnRlbnQ6IFwiY2VudGVyXCJcbiAgfSxcbiAgdmFyaWFudHM6IHtcbiAgICBpbmxpbmU6IHtcbiAgICAgIHRydWU6IHtcbiAgICAgICAgZGlzcGxheTogXCJpbmxpbmUtZmxleFwiXG4gICAgICB9XG4gICAgfVxuICB9XG59KTtcbkNlbnRlci5kaXNwbGF5TmFtZSA9IFwiQ2VudGVyXCI7XG5cbmV4cG9ydCB7IENlbnRlciB9O1xuIl0sIm5hbWVzIjpbImNoYWtyYSIsIkNlbnRlciIsImJhc2UiLCJkaXNwbGF5IiwiYWxpZ25JdGVtcyIsImp1c3RpZnlDb250ZW50IiwidmFyaWFudHMiLCJpbmxpbmUiLCJ0cnVlIiwiZGlzcGxheU5hbWUiXSwiaWdub3JlTGlzdCI6WzBdLCJzb3VyY2VSb290IjoiIn0=\n//# sourceURL=webpack-internal:///(ssr)/./node_modules/@chakra-ui/react/dist/esm/components/center/center.js\n");
+
+/***/ }),
+
 /***/ "(ssr)/./node_modules/@chakra-ui/react/dist/esm/components/input/input.js":
 /*!**************************************************************************!*\
   !*** ./node_modules/@chakra-ui/react/dist/esm/components/input/input.js ***!

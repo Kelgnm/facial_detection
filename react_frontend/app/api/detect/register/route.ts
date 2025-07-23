@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
     }
 
     const scriptPath = path.join(process.cwd(), '..', 'src', 'scripts', 'face_detect.py');
-    const dataJson = path.join(process.cwd(), 'react_frontend', 'public', 'scripts', 'data.json');
+    const dataJson = path.join(process.cwd(), 'react_frontend', 'public', 'scripts', 'data.json')
     const register = spawn('python', [scriptPath, userID, name, role, password, dataJson]);
 
     let output = '';
@@ -30,13 +30,9 @@ export async function POST(req: NextRequest) {
     const exitCode: number = await new Promise((resolve) => {
       register.on('close', resolve);
     });
-
-    console.log('Script output:', output); // Optional: Debug line
-
-    // ✅ Check output AFTER it's fully collected
+    
     const match = output.match(/\{[\s\S]*\}/);
     if (!match) {
-      console.error('No JSON in output:', output);
       return NextResponse.json({
         success: false,
         message: 'No valid JSON output from Python script'
@@ -46,16 +42,16 @@ export async function POST(req: NextRequest) {
     let result;
 
     try {
-      result = JSON.parse(match[0]); // only parse the matched JSON part
+      result = JSON.parse(match[0]);
     } catch (err) {
-      console.error('Failed to parse JSON:', output);
+      console.error('Failed to parse output as JSON:', output);
       return NextResponse.json({
         success: false,
         message: 'Invalid response from Python script'
       }, { status: 500 });
     }
 
-    if (exitCode === 0 && result.status === 'success') {
+    if (String(result.status).toLowerCase() === 'success') {
       return NextResponse.json({
         success: true,
         message: result.message || 'Registered successfully'

@@ -1,15 +1,15 @@
-import { Providers } from './providers';
+// app/layout.tsx
+'use client';
 
-export const metadata = {
-  title: "Face recognition",
-  description: "Face detection site"
-}
+import { ChakraProvider, defaultSystem } from '@chakra-ui/react';
 
-export default function RootLayout({ children }) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <body>
-        <Providers>{children}</Providers>
+        <ChakraProvider value={defaultSystem}>
+          {children}
+        </ChakraProvider>
       </body>
     </html>
   );

@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter, notFound } from 'next/navigation';
+import { PasswordInput } from "../src/components/ui/password-input"
 import { Box, Heading, Button, Text, VStack, Center, Spinner, Input } from '@chakra-ui/react';
 import { motion } from 'framer-motion';
+import { Label } from '@chakra-ui/react/dist/types/components/checkbox/namespace';
 
 export default function App() {
   const [name, setName] = useState<string>('Guest');
@@ -16,6 +18,7 @@ export default function App() {
   const [errorMsg, setErrorMsg] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+
 
   const detected = async () => {
     setLoading(true);
@@ -30,13 +33,19 @@ export default function App() {
     try {
       const res = await fetch('/api/detect');
       const data = await res.json();
+      console.log('Detect response:', data);
 
       if (data.seen) {
         localStorage.setItem('recognizedName', data.seen);
         setName(data.seen)
         setRecognized(true);
-        setDetectedPassword(data.password);
-        setRequirePassword(true);
+
+        if (data.password) {
+          setDetectedPassword(data.password);
+          setRequirePassword(true);  
+        } else {
+          router.push(`/${data.seen.toLowerCase()}`);
+        }
       } else {
         setErrorMsg('Face not recognized. Please try again.');
       }
@@ -48,16 +57,16 @@ export default function App() {
     }
   };
 
-    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-      e.preventDefault();
+const handleSubmit = (e: React.FormEvent) => {
+  e.preventDefault();
 
-      if (password === detectedPassword) {
-        setPasswordError('');
-        router.push(`/${name.toLowerCase()}`);
-      } else {
-        setPasswordError('Incorrect password');
-      }
-    };
+  if (password === detectedPassword) {
+    setPasswordError('');
+    router.push(`/${name.toLowerCase()}`);
+  } else {
+    setPasswordError('Incorrect password');
+  }
+};
 
 useEffect(() => {
   const stored = localStorage.getItem('recognizedName');
@@ -131,39 +140,32 @@ const MotionText = motion(Text);
                 {errorMsg}
               </Text>
             )}
+            <form onSubmit={handleSubmit}>
+              {requirePassword ? (
+                <>
+                  <Input
+                    autoFocus
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    autoComplete="current-password"
+                    name="password"
+                    required
+                    mt={2}
+                  />
+                  <Center>
+                  <Button mt={4} colorScheme="green" type="submit">
+                    Verify
+                  </Button>
+                  </Center>
+                </>
+              ) : (
+                <Text fontSize="lg" color="red.500">
+                  {passwordError}
+                </Text>
+              )}
+            </form>
 
-            {requirePassword && (
-              <form onSubmit={handleSubmit}
-              >
-                <Input 
-                  type="text" 
-                  name="username" 
-                  value={name} 
-                  readOnly 
-                  style={{ position: 'absolute', left: '-9999px', height: 0, width: 0, overflow: 'hidden' }}
-                  autoComplete="username"
-                />
-
-                <Input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  autoComplete="current-password"
-                  name="password"
-                  required
-                  mt={2}
-                />
-                <Button mt={4} colorScheme="green" type="submit" alignItems="center">
-                  Verify
-                </Button>
-                {passwordError && (
-                  <Text color="red.500" mt={2}>
-                    {passwordError}
-                  </Text>
-                )}
-              </form>
-
-            )}
 
 
             <Button colorScheme="blue" onClick={detected}>
