@@ -165,38 +165,38 @@ for person_name in os.listdir(base_dir):
             except Exception as e:
                 continue
 
-with open(os.path.join(os.path.dirname(__file__), "encodings.pkl"), "wb") as f:
-    pickle.dump({
-        "encodings": known_face_encodings,
-        "names": known_face_names
-    }, f)
+    with open(os.path.join(os.path.dirname(__file__), "encodings.pkl"), "wb") as f:
+        pickle.dump({
+            "encodings": known_face_encodings,
+            "names": known_face_names
+        }, f)
 
-try:
-    if os.path.exists(data_path):
-        with open(data_path, 'r') as file:
-            data = json.load(file)
-    else:
-        data = {}
+    try:
+        if os.path.exists(data_path):
+            with open(data_path, 'r') as file:
+                data = json.load(file)
+        else:
+            data = {}
 
-except Exception:
-    print(json.dumps({ "status": "error", "message": f"Failed to write data.json: {str(Exception)}" }))
-    sys.exit(1)
+    except Exception:
+        print(json.dumps({ "status": "error", "message": f"Failed to write data.json: {str(Exception)}" }))
+        sys.exit(1)
 
-data[name] = {         
-    "name": name,
-    "role": role,
-    "password": password
-}
+    data[name] = {         
+        "name": name,
+        "role": role,
+        "password": password
+    }
 
-result = {
-    "status": "success",
-    "message": f"Registered {image_path} images"
-}
-print(json.dumps(result))
+    result = {
+        "status": "success",
+        "message": f"Registered {image_path} images"
+    }
+    print(json.dumps(result))
 
-try:
-    with open(data_path, 'w') as file:
-        json.dump(data, file, indent=2)
-except Exception as e:
-    sys.stdout.write(json.dumps({ "status": "error", "message": f"Failed to write to data.json: {str(e)}" }))
-    sys.stdout.flush()
+    try:
+        with open(data_path, 'w') as file:
+            json.dump(data, file, indent=2)
+    except Exception as e:
+        sys.stdout.write(json.dumps({ "status": "error", "message": f"Failed to write to data.json: {str(e)}" }))
+        sys.stdout.flush()

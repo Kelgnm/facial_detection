@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "types": ["vite/client"],
     "target": "ES2017",
     "baseUrl": ".",
     "paths": {
@@ -30,9 +31,8 @@
   "include": [
     "next-env.d.ts",
     ".next/types/**/*.ts",
-    "**/*.ts",
-    "**/*.tsx"
-  ],
+    "**/*.ts"
+, "libs/theme.js", "libs/theme.js", "libs/theme.js", "src/components/ui/ThemeToggle.tsx"  ],
   "exclude": [
     "node_modules"
   ]

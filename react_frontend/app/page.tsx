@@ -5,7 +5,6 @@ import { useRouter, notFound } from 'next/navigation';
 import { PasswordInput } from "../src/components/ui/password-input"
 import { Box, Heading, Button, Text, VStack, Center, Spinner, Input } from '@chakra-ui/react';
 import { motion } from 'framer-motion';
-import { Label } from '@chakra-ui/react/dist/types/components/checkbox/namespace';
 
 export default function App() {
   const [name, setName] = useState<string>('Guest');
@@ -37,7 +36,7 @@ export default function App() {
 
       if (data.seen) {
         localStorage.setItem('recognizedName', data.seen);
-        setName(data.seen)
+        setName(data.seen);
         setRecognized(true);
 
         if (data.password) {
@@ -168,10 +167,10 @@ const MotionText = motion(Text);
 
 
 
-            <Button colorScheme="blue" onClick={detected}>
+            <Button colorScheme="blue" variant="solid" onClick={detected}>
               Try Detect Again
             </Button>
-            <Button colorScheme="red" onClick={() => router.push(`/register`)}>
+            <Button colorScheme="red" variant="solid" onClick={() => router.push(`/register`)}>
               Register!
             </Button>
         </VStack>

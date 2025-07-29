@@ -82,7 +82,7 @@ for i in range(5):
                 password = user_data.get("password")
                 print(f"[DEBUG] Found user: role={role}, password={password}", file=sys.stderr)
 
-    # print(json.dumps({"seen": "test", "role": "test", "password": "123"}))
+    # print(json.dumps({"seen": "stiliyan", "role": "CEO", "password": "123"}))
     print(f"Detected {len(face_encodings)} faces in frame", file=sys.stderr)
     result = {"seen": selected, "role": role, "password": password}
     print(json.dumps(result))

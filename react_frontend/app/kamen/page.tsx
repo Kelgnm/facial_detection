@@ -40,12 +40,12 @@ export default function UserPage() {
             localStorage.setItem('recognizedName', paramName)
         }
 
-        fetch('/scripts/data.json')
-            .then((res) => res.json())
-            .then((data: PersonData) => {
-                const person = data[paramName];
-                if (person?.role) setRole(person.role);
-            });
+        // fetch('/scripts/data.json')
+        //     .then((res) => res.json())
+        //     .then((data: PersonData) => {
+        //         const person = data[paramName];
+        //         if (person?.role) setRole(person.role);
+        //     });
 
         const interval = setInterval(async () => {
             try {
