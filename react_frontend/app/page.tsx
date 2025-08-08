@@ -1,25 +1,124 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter, notFound } from 'next/navigation';
-import { PasswordInput } from "../src/components/ui/password-input"
-import { Box, Heading, Button, Text, VStack, Center, Spinner, Input } from '@chakra-ui/react';
+import { useEffect, useState, useRef } from 'react';
+import { useRouter } from 'next/navigation';
+import { Box, Heading, Button, Text, VStack, Center, Input } from '@chakra-ui/react';
 import { motion } from 'framer-motion';
+import { ColorModeProvider } from '../src/color-mode';
 
 export default function App() {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const detectionInterval = useRef<NodeJS.Timeout | null>(null);
+  const router = useRouter();
+
   const [name, setName] = useState<string>('Guest');
+  const [displayedName, setDisplayedName] = useState('');
   const [requirePassword, setRequirePassword] = useState(false);
   const [password, setPassword] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [detectedPassword, setDetectedPassword] = useState<string | null>(null);
-  const [displayedName, setDisplayedName] = useState('');
   const [recognized, setRecognized] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
 
+  useEffect(() => {
+    async function startCamera() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
 
-  const detected = async () => {
+          await new Promise<void>((resolve) => {
+            const video = videoRef.current!;
+            let resolved = false;
+
+            const onLoadedMetadata = () => {
+              resolved = true;
+              video.removeEventListener('loadedmetadata', onLoadedMetadata);
+              resolve();
+            };
+
+            video.addEventListener('loadedmetadata', onLoadedMetadata);
+
+            setTimeout(() => {
+              if (!resolved) {
+                video.removeEventListener('loadedmetadata', onLoadedMetadata);
+                resolve();
+              }
+            }, 5000);
+
+            video.play().catch(() => {});
+          });
+
+          detected();
+        }
+      } catch {
+        setErrorMsg('Cannot access camera');
+      }
+    }
+    startCamera();
+  }, []);
+
+  useEffect(() => {
+  const video = videoRef.current;
+  if (!video) return;
+
+  function runDetection() {
+    if (video.videoWidth > 0 && video.videoHeight > 0) {
+      detected();
+    }
+  }
+
+  detectionInterval.current = setInterval(runDetection, 2000);
+  return () => {
+    if (detectionInterval.current) clearInterval(detectionInterval.current)
+  };
+}, [recognized]);
+
+  useEffect(() => {
+    if (!name) return;
+    let i = 0;
+    let current = '';
+    setDisplayedName('');
+    const interval = setInterval(() => {
+      if (i < name.length) {
+        current += name[i];
+        setDisplayedName(current);
+        i++;
+      } else {
+        clearInterval(interval);
+      }
+    }, 150);
+    return () => clearInterval(interval);
+  }, [name]);
+
+  async function captureFrames(video: HTMLVideoElement, totalFrames: number, delayMs: number): Promise<HTMLCanvasElement[]> {
+    const frames: HTMLCanvasElement[] = [];
+
+    if (video.paused || video.ended || video.videoWidth === 0 || video.videoHeight === 0) {
+      return frames;
+    }
+
+    for (let i = 0; i < totalFrames; i++) {
+      if (video.paused || video.ended || video.videoWidth === 0 || video.videoHeight === 0) break;
+
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) break;
+
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      frames.push(canvas);
+
+      await new Promise((res) => setTimeout(res, delayMs));
+    }
+    return frames;
+  }
+
+  
+  async function detected() {
     setLoading(true);
     setErrorMsg('');
     setRecognized(false);
@@ -27,21 +126,51 @@ export default function App() {
     setName('Guest');
     setRequirePassword(false);
     setDetectedPassword(null);
+    setPassword('');
+    setPasswordError('');
     localStorage.removeItem('recognizedName');
 
+    if (!videoRef.current || !canvasRef.current) {
+      setLoading(false);
+      setErrorMsg('Video or canvas not ready');
+      return;
+    }
+
+    const video = videoRef.current;
+    if (video.videoWidth === 0 || video.videoHeight === 0) {
+      setLoading(false);
+      setErrorMsg('Video dimensions not ready');
+      return;
+    }
+
     try {
-      const res = await fetch('/api/detect');
+      
+      const frames = await captureFrames(video, 30, 100);
+      if (frames.length === 0) {
+        setErrorMsg('No valid frames captured');
+        setLoading(false);
+        return;
+      }
+
+      const images = frames.map((canvas) => canvas.toDataURL('image/jpeg'));
+
+      
+      const res = await fetch('/api/detect', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ images }),
+      });
+
       const data = await res.json();
-      console.log('Detect response:', data);
 
       if (data.seen) {
-        localStorage.setItem('recognizedName', data.seen);
-        setName(data.seen);
         setRecognized(true);
+        setName(data.seen);
+        localStorage.setItem('recognizedName', data.seen);
 
         if (data.password) {
           setDetectedPassword(data.password);
-          setRequirePassword(true);  
+          setRequirePassword(true);
         } else {
           router.push(`/${data.seen.toLowerCase()}`);
         }
@@ -49,132 +178,129 @@ export default function App() {
         setErrorMsg('Face not recognized. Please try again.');
       }
     } catch (error) {
-      console.error('Detection error:', error);
-      setErrorMsg('Error running Python script');
+      setErrorMsg('Error during face detection');
+      console.error(error);
     } finally {
       setLoading(false);
     }
-  };
-
-const handleSubmit = (e: React.FormEvent) => {
-  e.preventDefault();
-
-  if (password === detectedPassword) {
-    setPasswordError('');
-    router.push(`/${name.toLowerCase()}`);
-  } else {
-    setPasswordError('Incorrect password');
   }
-};
 
-useEffect(() => {
-  const stored = localStorage.getItem('recognizedName');
-  if (stored) {
-      setName(stored)  
-  }
-  const timeout = setTimeout(() => {
-    detected();
-  }, 1500);
-
-  return () => clearTimeout(timeout);
-}, []);
-
-useEffect(() => {
-  if (!name) return;
-  let i = 0;
-  let current = '';
-  setDisplayedName('');
-
-  const interval = setInterval(() => {
-    if (i < name.length) {
-        current += name[i];
-        setDisplayedName(current);
-        i++;
+  
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (password === detectedPassword) {
+      setPasswordError('');
+      router.push(`/${name.toLowerCase()}`);
     } else {
-      clearInterval(interval);
+      setPasswordError('Incorrect password');
     }
-  }, 150);
+  }
 
-  return () => clearInterval(interval);
-}, [name]);
-
-
-
-const MotionBox = motion(Box);
-const MotionText = motion(Text);
+  const MotionBox = motion(Box);
+  const MotionText = motion(Text);
 
   return (
-    <Center minH="100vh" bg="gray.50">
-      <MotionBox
-      transition={{ duration: 0.6 }}
-      >
-        <VStack alignItems="center">
-          <Heading size="6xl" mb={10}>Welcome,
-            <MotionText
-            as="span"
-            fontWeight="bold"
-            color="blue.500"
-            fontSize="2x1"
-            ml={1}>
-             {displayedName}
-            <motion.span
-            animate={{ opacity: [0, 1, 0] }}
-            transition={{ repeat: Infinity, duration: 1 }}
-              >
-            |
-            </motion.span>
-             </MotionText>
-            </Heading>
-            
-            {recognized ? (
-              <Text fontSize="lg" color="green.500">
-                Face recognized!
-              </Text>
-            ) : loading ? (
-              <Text fontSize="lg" color="gray.500">
-                Scanning face...
-              </Text>
-            ) : (
-              <Text fontSize="lg" color="red.500">
-                {errorMsg}
-              </Text>
-            )}
-            <form onSubmit={handleSubmit}>
-              {requirePassword ? (
-                <>
-                  <Input
-                    autoFocus
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    autoComplete="current-password"
-                    name="password"
-                    required
-                    mt={2}
-                  />
-                  <Center>
-                  <Button mt={4} colorScheme="green" type="submit">
-                    Verify
-                  </Button>
-                  </Center>
-                </>
+    <ColorModeProvider forcedTheme='white'>
+      <Center minH="100vh" bg="gray.50">
+        <MotionBox
+        transition={{ duration: 0.6 }}
+        >
+          <VStack alignItems="center">
+            <Heading size="6xl" mb={10} color={'black'}>Welcome,
+              <MotionText
+              as="span"
+              fontWeight="bold"
+              color="blue.500"
+              fontSize="2x1"
+              ml={1}>
+              {displayedName}
+              <motion.span
+              animate={{ opacity: [0, 1, 0] }}
+              transition={{ repeat: Infinity, duration: 1 }}
+                >
+              |
+              </motion.span>
+              </MotionText>
+              </Heading>
+              
+              {recognized ? (
+                <Text fontSize="lg" color="green.500">
+                  Face recognized!
+                </Text>
+              ) : loading ? (
+                <Text fontSize="lg" color="gray.500">
+                  Scanning face...
+                </Text>
               ) : (
                 <Text fontSize="lg" color="red.500">
-                  {passwordError}
+                  {errorMsg}
                 </Text>
               )}
-            </form>
+              <form onSubmit={handleSubmit}>
+                {requirePassword ? (
+                  <>
+                    <Input
+                      autoFocus
+                      color="black"
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      autoComplete="current-password"
+                      name="password"
+                      required
+                      mt={2}
+                      css={{ "--error-color": "green" }}
+                    />
+                    <Center>
+                    <Button borderWidth="0.5px"
+                    colorPalette="green"
+                    borderColor="colorPalette.500"
+                    _hover={{
+                      borderColor: "colorPalette.600",
+                    }} type="submit">
+                      Verify
+                    </Button>
+                    </Center>
+                  </>
+                ) : (
+                  <Text fontSize="lg" color="red.500">
+                    {passwordError}
+                  </Text>
+                )}
+              </form>
 
 
 
-            <Button colorScheme="blue" variant="solid" onClick={detected}>
-              Try Detect Again
-            </Button>
-            <Button colorScheme="red" variant="solid" onClick={() => router.push(`/register`)}>
-              Register!
-            </Button>
-        </VStack>
-      </MotionBox>
-    </Center>
+              <Button borderWidth="1px"
+              colorPalette="blue"
+              borderColor="colorPalette.500"
+              _hover={{
+                borderColor: "colorPalette.600",
+              }} onClick={detected}>
+                Try Detect Again
+              </Button>
+              <Button borderWidth="1px"
+              colorPalette="red"
+              borderColor="colorPalette.500"
+              _hover={{
+                borderColor: "colorPalette.600",
+              }} onClick={() => router.push(`/register`)}>
+                Register!
+              </Button>
+
+            <video
+              ref={videoRef}
+              autoPlay
+              muted
+              playsInline
+              width={320}
+              height={240}
+              style={{ position: 'absolute', left: '-9999px' }}
+            />
+            <canvas ref={canvasRef} style={{ display: 'none' }} />
+          </VStack>
+        </MotionBox>
+      </Center>
+    </ColorModeProvider>
   );
 }

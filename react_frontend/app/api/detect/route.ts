@@ -1,45 +1,31 @@
-import { NextResponse } from 'next/server';
-import { spawn } from 'child_process';
+import { NextResponse } from 'next/server'
+import { spawn } from 'child_process'
 
-function runPythonScript(): Promise<any> {
-  return new Promise((resolve, reject) => {
-    const python = spawn('python', ['../src/scripts/image.py']);
+export async function POST(req: Request) {
+  const body = await req.json();
+  const images = body?.images;
+
+  if (!images || !Array.isArray(images) || images.length === 0) {
+    return NextResponse.json({ seen: null, error: 'Invalid or missing images data' }, { status: 400 });
+  }
+
+  return new Promise((resolve) => {
+    const py = spawn('python', ['../src/scripts/image.py']);
+
+    py.stdin.write(JSON.stringify({ images }));
+    py.stdin.end();
+
     let output = '';
+    py.stdout.on('data', (data) => (output += data.toString()));
+    py.stderr.on('data', (err) => console.error('[stderr]', err.toString()));
 
-    python.stdout.on('data', (data) => {
-      output += data.toString();
-    });
-
-    python.stderr.on('data', (data) => {
-      console.error('Python stderr:', data.toString());
-    });
-
-    python.on('error', (err) => {
-      reject(err);
-    });
-
-    python.on('close', (code) => {
-      console.log('Python exited with code:', code);
-      console.log('Raw output:', output);
+    py.on('close', () => {
       try {
-        const result = JSON.parse(output.trim());
-        resolve(result);
-      } catch (err) {
-        console.error('Failed to parse JSON:', output);
-        reject(new Error('Invalid JSON output'));
+        const parsed = JSON.parse(output.trim());
+        resolve(NextResponse.json(parsed));
+      } catch (e) {
+        resolve(NextResponse.json({ seen: null, error: 'Failed to parse output' }));
       }
     });
-  });  
-}
-
-
-export async function GET(): Promise<Response> {
-  try {
-    const result = await runPythonScript();
-    return NextResponse.json(result);
-  } catch (error) {
-    console.error('Error running script:', error);
-    return NextResponse.json({seen: null, error: error.message || 'Unknown'})
-  }
-  
+  });
 }

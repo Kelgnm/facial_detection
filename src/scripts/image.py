@@ -1,90 +1,162 @@
-import os
 import sys
-import cv2 as cv
-import numpy as np
-import pickle
-import face_recognition
 import json
+import base64
+import numpy as np
+import cv2
+from cryptography.fernet import Fernet
+import face_recognition
+import psycopg2
 
-print("Python being used:", sys.executable, file=sys.stderr)
+def myprint(*args, **kwargs):
+    print(*args, **{**kwargs, "file": sys.stderr})
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-threshold = 0
+def decode_image(base64_str: str):
+    """Decode a base64-encoded image string to an OpenCV image (BGR)."""
+    try:
+        myprint("Decoding base64 image")
+        if "," in base64_str:
+            base64_str = base64_str.split(",")[1]
+        image_data = base64.b64decode(base64_str)
+        nparr = np.frombuffer(image_data, np.uint8)
+        if nparr.size == 0:
+            raise ValueError("Decoded buffer is empty")
+        img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+        if img is None:
+            raise ValueError("Failed to decode image")
+        myprint("Image decoded successfully")
+        return img
+    except Exception as e:
+        myprint(f"[ERROR] Image decode failed: {e}")
+        return None
 
-with open(os.path.join(BASE_DIR, "../../react_frontend/public/scripts/data.json"), "r") as f:
-    metadata = json.load(f)
-    print("Loaded metadata keys:", list(metadata.keys()), file=sys.stderr)
+def parse_encoding_vector(vector_str: str) -> np.ndarray:
+    """Parse a string representation of a vector tuple into a numpy array."""
+    try:
+        values = vector_str.strip("()").split(",")
+        return np.array([float(x) for x in values], dtype=np.float64)
+    except Exception as e:
+        myprint(f"[ERROR] Failed to parse encoding vector: {e}")
+        return np.array([])
 
-known_face_names = []
-known_face_encodings = []
+def load_known_faces_from_db():
+    """Load known face names, passwords, and encodings from PostgreSQL."""
+    try:
+        myprint("Connecting to database...")
+        conn = psycopg2.connect(
+            dbname="face_images",
+            user="postgres",
+            password="kokostelko123",
+            host="localhost",
+            port=5432,
+        )
+        with conn.cursor() as cur:
+            cur.execute("SELECT name, password, vec_low, vec_high FROM facess")
+            records = cur.fetchall()
+        conn.close()
 
-with open(os.path.join(BASE_DIR, "encodings.pkl"), 'rb') as file:
-    data = pickle.load(file)
-    known_face_encodings = data["encodings"]
-    known_face_names = data["names"]
+        myprint(f"Loaded {len(records)} known face records from DB")
 
-print(f"Loaded {len(known_face_names)} known face names", file=sys.stderr)
-print(f"Loaded {len(known_face_encodings)} face encodings", file=sys.stderr)
+        known_names = []
+        known_passwords = []
+        known_encodings = []
+        password = None
 
+        for name, password, vec_low, vec_high in records:
+            low_vec = parse_encoding_vector(vec_low)
+            high_vec = parse_encoding_vector(vec_high)
+            if low_vec.size == 0 or high_vec.size == 0:
+                myprint(f"Skipping record for {name}: invalid encoding vector")
+                continue
+            encoding = np.concatenate((low_vec, high_vec))  # 128-dim vector
+            known_names.append(name)
+            fernet = Fernet(load_key())
+            decPass = fernet.decrypt(password.encode()).decode()
+            known_passwords.append(decPass)
+            known_encodings.append(encoding)
 
-img = cv.VideoCapture(1)
-img.set(cv.CAP_PROP_BUFFERSIZE, 1)
-
-for i in range(5):
-    ret, frame = img.read()
-    img.release()
-
-    if not ret:
-        print(json.dumps({"seen": None, "error": "No frame captured"}))
-        sys.stdout.flush()
+        return known_names, known_passwords, known_encodings
+    except Exception as e:
+        myprint(f"[ERROR] Failed to load known faces from DB: {e}")
+        print(json.dumps({"error": "Database error"}))
         sys.exit(1)
 
-    small_frame = cv.resize(frame, (0, 0), fx=0.25, fy=0.25)
-    rgb_frame = np.ascontiguousarray(small_frame[:, :, ::-1])
+def load_key():
+    with open("secret.key", "rb") as f:
+        return f.read()
 
-    face_locations = face_recognition.face_locations(rgb_frame)
-    face_encodings = face_recognition.face_encodings(rgb_frame, face_locations)
+def main():
+    raw_input = sys.stdin.read()
+    input_data = json.loads(raw_input)
 
-    face_names = []
-    face_closer = []
+    images_b64_list = input_data.get("images", [])
+    if not images_b64_list:
+        print(json.dumps({"error": "No images provided"}))
+        sys.exit(1)
 
-    for face_encoding in face_encodings:
-        face_distances = face_recognition.face_distance(known_face_encodings, face_encoding)
-        if not len(face_distances):
+    embeddings = []
+    for idx, base64_image in enumerate(images_b64_list):
+        if not base64_image or len(base64_image) < 100:
+            myprint(f"Skipping image {idx+1}: base64 string too short or empty")
             continue
 
-        best_index = np.argmin(face_distances)
-        confidence = 1.0 - face_distances[best_index]
+        img = decode_image(base64_image)
 
-        if confidence >= threshold:
-            name = known_face_names[best_index]
+        # New validation for decoded image
+        if img is None:
+            myprint(f"Skipping image {idx+1}: decode failed")
+            continue
+        if img.size == 0 or img.shape[0] == 0 or img.shape[1] == 0:
+            myprint(f"Skipping image {idx+1}: image invalid or zero dimension {img.shape}")
+            continue
+
+        myprint(f"Image {idx+1} shape: {img.shape}")
+
+        rgb_img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+
+        try:
+            encs = face_recognition.face_encodings(rgb_img)
+        except Exception as e:
+            myprint(f"[ERROR] face_recognition failed on image {idx+1}: {e}")
+            continue
+
+        if encs:
+            embeddings.append(encs[0])
         else:
-            name = "Unknown"
+            myprint(f"No face found in image {idx+1}")
 
-        face_names.append(name)
-        face_closer.append(confidence)
+    if not embeddings:
+        print(json.dumps({"seen": None, "error": "No faces found in images"}))
+        sys.exit(0)
 
-    selected = None
-    role = None
-    password = None
-    if face_names and any(name != "Unknown" for name in face_names):
-        valid_indices = [i for i, name in enumerate(face_names) if name != "Unknown"]
-        if valid_indices:
-            best_valid_index = valid_indices[np.argmax([face_closer[i] for i in valid_indices])]
-            selected = face_names[best_valid_index]
+    unknown_encoding = np.mean(embeddings, axis=0)
 
-            user_data = metadata.get(selected.lower())
-            print(f"[DEBUG] Looking up user: {user_data}", file=sys.stderr)
-            if not user_data:
-                print(f"User '{selected}' not found in metadata", file=sys.stderr)
-            else:
-                role = user_data.get("role", "Unknown")
-                password = user_data.get("password")
-                print(f"[DEBUG] Found user: role={role}, password={password}", file=sys.stderr)
+    known_names, known_passwords, known_encodings = load_known_faces_from_db()
+    if not known_encodings:
+        print(json.dumps({"seen": None, "error": "No known faces in database"}))
+        sys.exit(0)
 
-    # print(json.dumps({"seen": "stiliyan", "role": "CEO", "password": "123"}))
-    print(f"Detected {len(face_encodings)} faces in frame", file=sys.stderr)
-    result = {"seen": selected, "role": role, "password": password}
+    matches = face_recognition.compare_faces(known_encodings, unknown_encoding, tolerance=0.6)
+    face_distances = face_recognition.face_distance(known_encodings, unknown_encoding)
+    best_match_index = np.argmin(face_distances) if face_distances.size > 0 else None
+
+    myprint(f"face distances: {face_distances}")
+    myprint(f"match index: {best_match_index}")
+    myprint(f"matches: {matches}")
+
+    if best_match_index is not None and matches[best_match_index]:
+        result = {
+            "seen": known_names[best_match_index],
+            "password": known_passwords[best_match_index]
+        }
+    else:
+        result = {
+            "seen": None,
+            "error": "No match found"
+        }
+
     print(json.dumps(result))
-    sys.stdout.flush()
-    sys.exit(0)
+
+
+
+if __name__ == "__main__":
+    main()

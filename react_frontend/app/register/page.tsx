@@ -1,11 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { PasswordInput } from "../../src/components/ui/password-input"
 import { Box, Heading, Button, Text, Stack, Center, Input, Field } from '@chakra-ui/react';
 
 export default function Register() {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const [name, setName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [status, setStatus] = useState<'success' | 'error' | ''>('');
@@ -21,6 +22,33 @@ export default function Register() {
     setMessage('');
 
     try {
+      const streaming = await navigator.mediaDevices.getUserMedia({ video: true });
+      const video = videoRef.current;
+      if (video) {
+         video.srcObject = streaming
+
+        await new Promise((resolve) => {
+          video.onloadedmetadata = () => resolve(null);
+        });
+
+        await new Promise((res) => setTimeout(res, 1000));
+
+        const bob = canvasRef.current;
+        if (bob) {
+          const ctx = bob.getContext('2d');
+          bob.width = video.videoWidth;
+          bob.height = video.videoHeight;
+          ctx?.drawImage(video, 0, 0, bob.width, bob.height);
+        }
+
+        // Stop camera
+        streaming.getTracks().forEach(track => track.stop());
+    }
+
+      const canvas = canvasRef.current;
+      if (!canvas) throw new Error("Canvas not found");
+      const base64Image = canvas.toDataURL('image/jpeg').split(",")[1];
+
         const res = await fetch('/api/detect/register', {
             method: 'POST',
             body: JSON.stringify({ 
@@ -28,6 +56,7 @@ export default function Register() {
               id: Math.floor(Math.random() * 10000),
               role: profession,
               password: password,
+              image: base64Image,
              }),
             headers: {
                 'Content-Type': 'application/json',
@@ -73,12 +102,6 @@ export default function Register() {
                 disabled={isLoading || status === 'success'}
               />
 
-              {/* <PasswordInput 
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />  */}
-
-
               <Input
                 type="password"
                 placeholder="Enter your password"
@@ -120,6 +143,11 @@ export default function Register() {
                   Retry
                 </Button>
               )}
+
+              <video ref={videoRef} autoPlay style={{ display: 'none' }} />
+              <canvas ref={canvasRef} style={{ display: 'none' }} />
+
+              {message && <p>{message}</p>}
             </Stack>
       </form>
     </Box>
