@@ -1,8 +1,9 @@
-export const dynamic = 'force-dynamic';
-
+// app/user/stiliyan/page.tsx
 import { notFound } from 'next/navigation';
 import { user } from '../../lib/db';
-import StiliyanClient from './client';
+import StiliyanClient from '../../components/client';
+
+export const dynamic = 'force-dynamic';
 
 export default async function StiliyanPage() {
   const username = 'stiliyan';

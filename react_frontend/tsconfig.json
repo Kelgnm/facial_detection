@@ -1,14 +1,13 @@
 {
   "compilerOptions": {
-    "types": ["vite/client"],
     "target": "ES2017",
     "baseUrl": ".",
     "paths": {
       "@components/*": ["./components/*"]
     },
     "lib": [
-      "dom",
-      "dom.iterable",
+      "DOM",
+      "DOM.Iterable",
       "esnext"
     ],
     "allowJs": true,

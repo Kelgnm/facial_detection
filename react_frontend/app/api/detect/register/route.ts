@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { spawn } from "child_process";
 
-export async function POST(req: NextRequest) {
+export async function POST(req: NextRequest): Promise<Response> {
   const { name, role, password, image } = await req.json();
   const userID = Date.now().toString();
 

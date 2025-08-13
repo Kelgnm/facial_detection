@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { spawn } from 'child_process'
 
-export async function POST(req: Request) {
+export async function POST(req: Request): Promise<Response> {
   const body = await req.json();
   const images = body?.images;
 
