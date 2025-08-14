@@ -24,10 +24,12 @@ def load_key():
 
 def insert(name, role, password, embedding):
     try:
+        print(f"Connecting to: {connect}")
         conn = psycopg2.connect(connect)
         cursor = conn.cursor(cursor_factory=RealDictCursor)
 
-        cursor.execute("SELECT vec_low, vec_high, name FROM facess")
+        print("Checking for duplicates...")
+        cursor.execute("SELECT vec_low, vec_high, name FROM detected")
         rows = cursor.fetchall()
 
         for row in rows:
@@ -37,25 +39,37 @@ def insert(name, role, password, embedding):
 
             dist = np.linalg.norm(existing_embedding - embedding)
             if dist < 0.5:
+                print(f"Duplicate found: {row['name']}")
                 return False, f"Face already exists as '{row['name']}'"
 
+        print("Splitting embedding...")
         vec_low, vec_high = split(embedding)
         vec_low_str = cube(vec_low)
         vec_high_str = cube(vec_high)
 
+        print("Encrypting password...")
         key = load_key()
         fernet = Fernet(key)
         encMessage = fernet.encrypt(password.encode()).decode()
 
+        print(f"Inserting user: {name}, role: {role}")
         cursor.execute("""
-            INSERT INTO facess (name, role, password, vec_low, vec_high)
+            INSERT INTO detected (name, role, password, vec_low, vec_high)
             VALUES (%s, %s, %s, %s, %s)
         """, (name, role, encMessage, vec_low_str, vec_high_str))
+
+        # Check affected rows
+        if cursor.rowcount != 1:
+            raise Exception("Insert failed, rowcount != 1")
+
         conn.commit()
+        print("Insert committed successfully!")
+
         cursor.close()
         conn.close()
 
         return True, f"User '{name}' registered successfully."
 
     except Exception as e:
+        print("Database error:", e)
         return False, f"Database error: {str(e)}"
