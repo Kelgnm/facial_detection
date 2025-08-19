@@ -7,7 +7,7 @@ import { Box, Button, Text, useColorMode, VStack } from '@chakra-ui/react';
 export default function StiliyanClient({ userData }: { userData: { name: string; role: string } }) {
   const router = useRouter();
   const videoRef = useRef<HTMLVideoElement>(null);
-  const intervalRef = useRef<NodeJS.Timer | null>(null);
+  const intervalRef = useRef<number | null>(null);
   const [name, setName] = useState(userData.name);
   const [loggedIn, setLoggedIn] = useState(true);
   const mismatchCountRef = useRef(0);
@@ -84,7 +84,7 @@ export default function StiliyanClient({ userData }: { userData: { name: string;
     return () => cleanup();
 
     function cleanup() {
-      if (intervalRef.current) {
+      if (intervalRef.current !== null) {
         clearInterval(intervalRef.current);
         intervalRef.current = null;
       }
@@ -96,9 +96,9 @@ export default function StiliyanClient({ userData }: { userData: { name: string;
   useEffect(() => {
     if (!loggedIn) return;
 
-    intervalRef.current = setInterval(detectFace, 5000);
+    intervalRef.current = window.setInterval(detectFace, 5000);
     return () => {
-      if (intervalRef.current) {
+      if (intervalRef.current !== null) {
         clearInterval(intervalRef.current);
         intervalRef.current = null;
       }
@@ -108,7 +108,7 @@ export default function StiliyanClient({ userData }: { userData: { name: string;
   const handleLogout = () => {
     setLoggedIn(false);
 
-    if (intervalRef.current) {
+    if (intervalRef.current !== null) {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
     }

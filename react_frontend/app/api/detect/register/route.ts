@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { spawn } from "child_process";
 
-export async function POST(req: NextRequest) {
+export async function POST(req: NextRequest): Promise<Response> {
   const { name, role, password, image } = await req.json();
 
-  return new Promise((resolve) => {
+  return new Promise<Response>((resolve) => {
     const python = spawn("python", ["../src/scripts/register_my_ass.py"]);
 
     let output = "";
@@ -25,14 +25,17 @@ export async function POST(req: NextRequest) {
       try {
         const parsed = JSON.parse(output.trim());
         resolve(NextResponse.json(parsed));
-      } catch (err) {
+      } catch (err: any) {
         resolve(
-          NextResponse.json({
-            status: "error",
-            message: "Invalid Python output",
-            output: output,
-            error: err.toString(),
-          })
+          NextResponse.json(
+            {
+              status: "error",
+              message: "Invalid Python output",
+              output: output,
+              error: err?.toString() ?? "Unknown error",
+            },
+            { status: 500 }
+          )
         );
       }
     });
