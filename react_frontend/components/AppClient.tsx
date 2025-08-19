@@ -92,16 +92,21 @@ export default function AppClient() {
     return () => clearInterval(interval);
   }, [name]);
 
-  async function captureFrames(video: HTMLVideoElement, totalFrames: number, delayMs: number): Promise<HTMLCanvasElement[]> {
-    const frames: HTMLCanvasElement[] = [];
+    async function captureFrames(video: HTMLVideoElement, totalFrames: number, delayMs: number): Promise<string[]> {
+    const frames: string[] = [];
 
-    if (video.paused || video.ended || video.videoWidth === 0 || video.videoHeight === 0) {
-      return frames;
+    if (video.videoWidth === 0 || video.videoHeight === 0) {
+      await new Promise<void>((resolve) => {
+        const onLoaded = () => {
+          video.removeEventListener('loadedmetadata', onLoaded);
+          resolve();
+        };
+        video.addEventListener('loadedmetadata', onLoaded);
+      });
     }
 
     for (let i = 0; i < totalFrames; i++) {
-      if (video.paused || video.ended || video.videoWidth === 0 || video.videoHeight === 0) break;
-
+      if (video.paused || video.ended || video.videoWidth === 0) break;
       const canvas = document.createElement('canvas');
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
@@ -109,12 +114,14 @@ export default function AppClient() {
       if (!ctx) break;
 
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      frames.push(canvas);
+      frames.push(canvas.toDataURL('image/jpeg'));
 
-      await new Promise((res) => setTimeout(res, delayMs));
+      await new Promise(res => setTimeout(res, delayMs));
     }
+
     return frames;
   }
+
 
   async function detected() {
     setLoading(true);
@@ -136,8 +143,6 @@ export default function AppClient() {
 
     const video = videoRef.current;
     if (video.videoWidth === 0 || video.videoHeight === 0) {
-      setLoading(false);
-      setErrorMsg('Video dimensions not ready');
       return;
     }
 
@@ -149,7 +154,7 @@ export default function AppClient() {
         return;
       }
 
-      const images = frames.map((canvas) => canvas.toDataURL('image/jpeg'));
+      const images = frames;
 
       const res = await fetch('/api/detect', {
         method: 'POST',
@@ -275,10 +280,11 @@ export default function AppClient() {
             colorScheme="blue"
             borderColor="blue.500"
             _hover={{ borderColor: "blue.600" }}
-            onClick={detected}
+            onClick={() => window.location.reload()}
           >
             Try Detect Again
           </Button>
+
           <Button
             borderWidth="1px"
             colorScheme="red"

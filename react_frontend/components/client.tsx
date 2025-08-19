@@ -7,7 +7,9 @@ import { Box, Button, Text, useColorMode, VStack } from '@chakra-ui/react';
 export default function StiliyanClient({ userData }: { userData: { name: string; role: string } }) {
   const router = useRouter();
   const videoRef = useRef<HTMLVideoElement>(null);
+  const intervalRef = useRef<NodeJS.Timer | null>(null);
   const [name, setName] = useState(userData.name);
+  const [loggedIn, setLoggedIn] = useState(true);
   const mismatchCountRef = useRef(0);
   const { colorMode, toggleColorMode } = useColorMode();
 
@@ -33,7 +35,7 @@ export default function StiliyanClient({ userData }: { userData: { name: string;
   }
 
   async function detectFace() {
-    if (!videoRef.current) return;
+    if (!loggedIn || !videoRef.current) return;
 
     try {
       const frames = await captureFrames(videoRef.current, 10, 100);
@@ -50,13 +52,11 @@ export default function StiliyanClient({ userData }: { userData: { name: string;
       const data = await res.json();
       if (data.seen === name) {
         mismatchCountRef.current = 0;
-        console.log('User recognized:', data.seen);
       } else {
         mismatchCountRef.current++;
         if (mismatchCountRef.current >= 1) {
+          handleLogout();
           alert('Face not recognized. Redirecting to login...');
-          localStorage.removeItem('recognizedName');
-          router.push('/');
         }
       }
     } catch (error) {
@@ -65,9 +65,11 @@ export default function StiliyanClient({ userData }: { userData: { name: string;
   }
 
   useEffect(() => {
+    let stream: MediaStream;
+
     async function startCamera() {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        stream = await navigator.mediaDevices.getUserMedia({ video: true });
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
           await videoRef.current.play();
@@ -78,15 +80,45 @@ export default function StiliyanClient({ userData }: { userData: { name: string;
     }
 
     startCamera();
+
+    return () => cleanup();
+
+    function cleanup() {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+      if (stream) stream.getTracks().forEach(track => track.stop());
+      if (videoRef.current) videoRef.current.srcObject = null;
+    }
   }, []);
 
   useEffect(() => {
-    const interval = setInterval(() => detectFace(), 5000);
-    return () => clearInterval(interval);
-  }, [name]);
+    if (!loggedIn) return;
+
+    intervalRef.current = setInterval(detectFace, 5000);
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    };
+  }, [name, loggedIn]);
 
   const handleLogout = () => {
-    localStorage.removeItem('recognizedName');
+    setLoggedIn(false);
+
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+
+    const video = videoRef.current;
+    if (video?.srcObject) {
+      (video.srcObject as MediaStream).getTracks().forEach(track => track.stop());
+      video.srcObject = null;
+    }
+
     router.push('/');
   };
 

@@ -76,7 +76,7 @@ export default function RegisterPageClient() {
 
       if (res.ok) {
         setStatus('success');
-        setMessage('It worked, recorded 29 pictures');
+        setMessage('It worked. I think.');
         setTimeout(() => router.push('/'), 1500);
       } else {
         setStatus('error');
@@ -91,7 +91,6 @@ export default function RegisterPageClient() {
     }
   };
 
-  // Simulate loading state with a disabled button and custom text
   const loadingText = isloading ? 'Loading...' : 'Register';
 
   return (

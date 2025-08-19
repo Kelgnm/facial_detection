@@ -1,28 +1,20 @@
 {
   "app\\page.tsx -> ../components/AppClient": {
-    "id": 70765,
+    "id": "app\\page.tsx -> ../components/AppClient",
     "files": [
-      "static/chunks/610-8ea61a9f28cb5b30.js",
-      "static/chunks/475-26eb4589d2d808c3.js",
-      "static/chunks/765.de5a1d05c7d44234.js"
+      "static/chunks/_app-pages-browser_components_AppClient_tsx.js"
     ]
   },
   "app\\register\\page.tsx -> ../../components/RegisterPageClient": {
-    "id": 66332,
+    "id": "app\\register\\page.tsx -> ../../components/RegisterPageClient",
     "files": [
-      "static/chunks/332.8605b889a5ea0ff3.js"
+      "static/chunks/_app-pages-browser_components_RegisterPageClient_tsx.js"
     ]
   },
-  "node_modules\\next\\dist\\client\\index.js -> ../pages/_app": {
-    "id": 90472,
+  "node_modules\\next\\dist\\client\\dev\\hot-reloader\\app\\use-websocket.js -> @vercel/turbopack-ecmascript-runtime/browser/dev/hmr-client/hmr-client.ts": {
+    "id": "node_modules\\next\\dist\\client\\dev\\hot-reloader\\app\\use-websocket.js -> @vercel/turbopack-ecmascript-runtime/browser/dev/hmr-client/hmr-client.ts",
     "files": [
-      "static/chunks/472.04a8725c923ee78b.js"
-    ]
-  },
-  "node_modules\\next\\dist\\client\\index.js -> ../pages/_error": {
-    "id": 99341,
-    "files": [
-      "static/chunks/341.a54acfc8ae065595.js"
+      "static/chunks/_app-pages-browser_node_modules_next_dist_client_dev_noop-turbopack-hmr_js.js"
     ]
   }
 }

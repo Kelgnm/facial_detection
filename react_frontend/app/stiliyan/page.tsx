@@ -1,4 +1,3 @@
-// app/user/stiliyan/page.tsx
 import { notFound } from 'next/navigation';
 import { user } from '../../lib/db';
 import StiliyanClient from '../../components/client';
