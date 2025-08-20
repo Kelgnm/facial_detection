@@ -5,7 +5,8 @@ import io
 from PIL import Image
 import numpy as np
 import face_recognition
-from db_ass import insert  # your DB script
+from db_ass import insert
+from server import register
 
 def respond(status: str, message: str):
     print(json.dumps({"status": status, "message": message}))
@@ -20,6 +21,7 @@ name = data.get("name")
 role = data.get("role")
 password = data.get("password")
 image_b64 = data.get("image")
+client_ip = data.get("ip")
 
 if not all([name, role, password, image_b64]):
     respond("error", "Missing required fields")

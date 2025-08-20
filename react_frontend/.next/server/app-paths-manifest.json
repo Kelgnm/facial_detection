@@ -1,8 +1,4 @@
 {
-  "/api/detect/route": "app/api/detect/route.js",
   "/api/detect/register/route": "app/api/detect/register/route.js",
-  "/register/page": "app/register/page.js",
-  "/page": "app/page.js",
-  "/_not-found/page": "app/_not-found/page.js",
-  "/stiliyan/page": "app/stiliyan/page.js"
+  "/register/page": "app/register/page.js"
 }

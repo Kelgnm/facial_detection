@@ -1,8 +1,0 @@
-{
-  "/api/detect/route": "/api/detect",
-  "/api/detect/register/route": "/api/detect/register",
-  "/register/page": "/register",
-  "/page": "/",
-  "/_not-found/page": "/_not-found",
-  "/stiliyan/page": "/stiliyan"
-}

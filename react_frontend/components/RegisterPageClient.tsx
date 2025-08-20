@@ -39,6 +39,18 @@ export default function RegisterPageClient() {
     };
   }, []);
 
+  useEffect(() => {
+    const tracked = async () => {
+      try {
+        await fetch("/api/detect/register");
+      } catch (error) {
+        console.error("tracking error:", error)
+      }
+    };
+
+    tracked();
+  }, []);
+
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
