@@ -1,31 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { spawn } from "child_process";
 
-export async function GET(req: NextRequest) {
-  let ip =
-    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-    (req as any).socket?.remoteAddress ||
-    req.ip ||
-    "unknown";
-
-  if (ip === "::1") {
-    ip = "127.0.0.1";
-  }
-
-  if (ip.startsWith("::ffff:")) {
-    ip = ip.replace("::ffff:", "");
-  }
-
-  console.log("[USER] IP:", ip);
-
-  return NextResponse.json({ ip });
-}
-
 export async function POST(req: NextRequest): Promise<Response> {
   const { name, role, password, image } = await req.json();
 
   return new Promise<Response>((resolve) => {
-    const python = spawn("python", ["src/scripts/register_my_ass.py"]);
+    const python = spawn("python", ["../src/scripts/register_my_ass.py"]);
 
     let output = "";
     let errorOutput = "";
@@ -39,13 +19,16 @@ export async function POST(req: NextRequest): Promise<Response> {
       console.error("[Python stderr]", data.toString());
     });
 
-    python.on("close", () => {
+    python.on("close", (code) => {
       if (errorOutput) console.error("[Python errors]", errorOutput);
+
+      console.log("[Python stdout]", output);  // <-- see what Python printed
 
       try {
         const parsed = JSON.parse(output.trim());
         resolve(NextResponse.json(parsed));
       } catch (err: any) {
+        console.error("[JSON parse error]", err);
         resolve(
           NextResponse.json(
             {
@@ -60,8 +43,16 @@ export async function POST(req: NextRequest): Promise<Response> {
       }
     });
 
+
     python.stdin.write(JSON.stringify({ name, role, password, image }));
     python.stdin.end();
   });
 }
 
+
+export async function GET(req: NextRequest) {
+  return NextResponse.json({
+    status: "info",
+    message: "Use POST to register a user with face data",
+  });
+}
