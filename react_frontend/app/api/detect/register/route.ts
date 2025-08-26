@@ -22,11 +22,12 @@ export async function POST(req: NextRequest): Promise<Response> {
     python.on("close", (code) => {
       if (errorOutput) console.error("[Python errors]", errorOutput);
 
-      console.log("[Python stdout]", output);  // <-- see what Python printed
+      console.log("[Python stdout]", output);
 
       try {
         const parsed = JSON.parse(output.trim());
-        resolve(NextResponse.json(parsed));
+        const status = parsed.status === "success" ? 200 : 400;
+        resolve(NextResponse.json(parsed, { status }));
       } catch (err: any) {
         console.error("[JSON parse error]", err);
         resolve(
